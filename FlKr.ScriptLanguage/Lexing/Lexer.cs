@@ -27,7 +27,11 @@ namespace FlKr.ScriptLanguage.Lexing
             new TokenDefinition(@"^%", TokenDetailTypes.Modulo, TokenTypes.MathOperation),
             new TokenDefinition(@"^\^", TokenDetailTypes.Exponentiation, TokenTypes.MathOperation),
 
-            new TokenDefinition(@"^\b(gleich)\b", TokenDetailTypes.Equals, TokenTypes.LogicOperation),
+            new TokenDefinition(@"^=", TokenDetailTypes.Equals, TokenTypes.LogicOperation),
+            new TokenDefinition(@"^>=", TokenDetailTypes.GreaterEqualThan, TokenTypes.LogicOperation),
+            new TokenDefinition(@"^>", TokenDetailTypes.GreaterThan, TokenTypes.LogicOperation),
+            new TokenDefinition(@"^<=", TokenDetailTypes.LessEqualThan, TokenTypes.LogicOperation),
+            new TokenDefinition(@"^<", TokenDetailTypes.LessThan, TokenTypes.LogicOperation),
             new TokenDefinition(@"^\b(nicht)\b", TokenDetailTypes.Not, TokenTypes.LogicOperation),
             new TokenDefinition(@"^\b(und)\b", TokenDetailTypes.And, TokenTypes.LogicOperation),
             new TokenDefinition(@"^\b(oder)\b", TokenDetailTypes.Or, TokenTypes.LogicOperation),

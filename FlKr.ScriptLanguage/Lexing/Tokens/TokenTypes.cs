@@ -41,6 +41,10 @@
         
         // Logic Operation
         Equals,
+        GreaterThan,
+        GreaterEqualThan,
+        LessThan,
+        LessEqualThan,
         Not,
         And,
         Or,

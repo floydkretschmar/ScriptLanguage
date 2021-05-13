@@ -90,29 +90,84 @@ namespace FlKr.ScriptLanguage.Parsing
 
         private Expression ParseEqualsOperationExpression(List<IToken> expression, out Type dataType)
         {
-            List<List<IToken>> equalsConditions = SplitIntoExpressions(
+            return ParseComparisonOperationExpression(
+                expression, 
+                TokenDetailTypes.Equals, 
+                Expression.Equal,
+                ParseGreaterThanOperationExpression, 
+                out dataType);
+        }
+
+        private Expression ParseGreaterThanOperationExpression(List<IToken> expression, out Type dataType)
+        {
+            return ParseComparisonOperationExpression(
+                expression, 
+                TokenDetailTypes.GreaterThan, 
+                Expression.GreaterThan,
+                ParseGreaterEqualThanOperationExpression, 
+                out dataType);
+        }
+
+        private Expression ParseGreaterEqualThanOperationExpression(List<IToken> expression, out Type dataType)
+        {
+            return ParseComparisonOperationExpression(
+                expression, 
+                TokenDetailTypes.GreaterEqualThan, 
+                Expression.GreaterThanOrEqual,
+                ParseLessThanOperationExpression, 
+                out dataType);
+        }
+
+        private Expression ParseLessThanOperationExpression(List<IToken> expression, out Type dataType)
+        {
+            return ParseComparisonOperationExpression(
+                expression, 
+                TokenDetailTypes.LessThan, 
+                Expression.LessThan,
+                ParseLessEqualThanOperationExpression, 
+                out dataType);
+        }
+
+        private Expression ParseLessEqualThanOperationExpression(List<IToken> expression, out Type dataType)
+        {
+            return ParseComparisonOperationExpression(
+                expression, 
+                TokenDetailTypes.LessEqualThan, 
+                Expression.LessThanOrEqual,
+                ParseAdditionOperationExpression, 
+                out dataType);
+        }
+
+        private Expression ParseComparisonOperationExpression(
+            List<IToken> expression,
+            TokenDetailTypes detailType,
+            Func<Expression, Expression, BinaryExpression> comparisonExpression,
+            ParseOperation parseOperation,
+            out Type dataType)
+        {
+            List<List<IToken>> expressions = SplitIntoExpressions(
                 expression,
                 true,
-                TokenDetailTypes.Equals);
-
-            if (equalsConditions.Count > 2)
+                detailType);
+            
+            if (expressions.Count > 2)
             {
-                throw new ParseException(expression, "Invalid equality expression");
+                throw new ParseException(expression, "Invalid comparison expression");
             }
-            else if (equalsConditions.Count == 2)
+            else if (expressions.Count == 2)
             {
-                var leftPart = ParseAdditionOperationExpression(equalsConditions[0], out var leftSubType);
-                var rightPart = ParseAdditionOperationExpression(equalsConditions[1], out var rightSubType);
+                var leftPart = parseOperation(expressions[0], out var leftSubType);
+                var rightPart = parseOperation(expressions[1], out var rightSubType);
 
                 if (leftSubType != rightSubType)
                     throw new ParseException(expression, "Data types on both sides of the equation do not align.");
 
                 dataType = typeof(bool);
-                return Expression.Equal(leftPart, rightPart);
+                return comparisonExpression(leftPart, rightPart);
             }
             else
             {
-                return ParseAdditionOperationExpression(expression, out dataType);
+                return parseOperation(expression, out dataType);
             }
         }
     }

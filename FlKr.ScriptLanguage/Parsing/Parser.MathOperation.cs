@@ -6,15 +6,8 @@ using FlKr.ScriptLanguage.Lexing.Tokens;
 
 namespace FlKr.ScriptLanguage.Parsing
 {
-    delegate Expression ParseOperation(List<IToken> expression, out Type dataType);
-
     public partial class Parser
     {
-        private Expression ParseAdditionOperationExpression(List<IToken> expression)
-        {
-            return ParseAdditionOperationExpression(expression, out var dataType);
-        }
-
         private Expression ParseAdditionOperationExpression(List<IToken> expression, out Type dataType)
         {
             List<List<IToken>> parts = SplitIntoExpressions(

@@ -6,6 +6,8 @@ using FlKr.ScriptLanguage.Lexing.Tokens;
 
 namespace FlKr.ScriptLanguage.Parsing
 {
+    delegate Expression ParseOperation(List<IToken> expression, out Type dataType);
+    
     public partial class Parser
     {
         public Func<T> Parse<T>(List<IToken> tokens)

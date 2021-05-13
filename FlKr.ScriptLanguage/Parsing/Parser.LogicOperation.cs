@@ -108,11 +108,11 @@ namespace FlKr.ScriptLanguage.Parsing
 
                 dataType = typeof(bool);
                 return Expression.Not(
-                    ParseMathOperationExpression(
+                    ParseAdditionOperationExpression(
                         expression.GetRange(1, expression.Count - 1)));
             }
 
-            return ParseMathOperationExpression(expression, out dataType);
+            return ParseAdditionOperationExpression(expression, out dataType);
         }
     }
 }

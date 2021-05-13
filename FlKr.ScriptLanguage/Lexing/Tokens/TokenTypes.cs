@@ -26,8 +26,10 @@
         
         // Value
         Text,
-        Number,
-        Boolean,
+        Integer,
+        FloatingPoint,
+        True,
+        False,
         
         // Math Operation
         Addition,
@@ -35,6 +37,8 @@
         Division,
         Multiplication,
         Modulo,
+        Exponentiation,
+        Negative,
         
         // Logic Operation
         Equals,

@@ -18,8 +18,7 @@ namespace FlKr.ScriptLanguage.Lexing
             new TokenDefinition(@"^'\b(\w+?)\b'", TokenDetailTypes.Text, TokenTypes.Value),
             new TokenDefinition(@"^\b(wahr)\b", TokenDetailTypes.True, TokenTypes.Value),
             new TokenDefinition(@"^\b(falsch)\b", TokenDetailTypes.False, TokenTypes.Value),
-            new TokenDefinition(@"^[0-9]+(,[0-9]+)?", TokenDetailTypes.FloatingPoint, TokenTypes.Value),
-            new TokenDefinition(@"^[0-9]+?", TokenDetailTypes.Integer, TokenTypes.Value),
+            new TokenDefinition(@"^[0-9]+(,[0-9]+)?", TokenDetailTypes.Number, TokenTypes.Value),
 
             new TokenDefinition(@"^\+", TokenDetailTypes.Addition, TokenTypes.MathOperation),
             new TokenDefinition(@"^-", TokenDetailTypes.Subtraction, TokenTypes.MathOperation),

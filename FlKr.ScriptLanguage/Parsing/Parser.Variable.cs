@@ -51,12 +51,9 @@ namespace FlKr.ScriptLanguage.Parsing
                 case TokenDetailTypes.False:
                     dataType = typeof(bool);
                     return Expression.Constant(false, dataType);
-                case TokenDetailTypes.FloatingPoint:
+                case TokenDetailTypes.Number:
                     dataType = typeof(double);
                     return Expression.Constant(double.Parse(((Token) valueToken).Value), dataType);
-                case TokenDetailTypes.Integer:
-                    dataType = typeof(int);
-                    return Expression.Constant(int.Parse(((Token) valueToken).Value), dataType);
                 case TokenDetailTypes.Text:
                     dataType = typeof(string);
                     return Expression.Constant(((Token) valueToken).Value, dataType);

@@ -26,8 +26,7 @@
         
         // Value
         Text,
-        Integer,
-        FloatingPoint,
+        Number,
         True,
         False,
         

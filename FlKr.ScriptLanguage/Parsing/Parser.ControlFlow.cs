@@ -39,11 +39,12 @@ namespace FlKr.ScriptLanguage.Parsing
                 throw new ParseException(expression,
                     $"Return operation was not terminated with a {nameof(TokenDetailTypes.EndOfLine)} token.");
 
-            if (expressionArray[1..].Length < 2)
+            var subexpression = expressionArray[1..^1].ToList();
+            if (subexpression.Count < 1)
                 throw new ParseException(expression,
                     $"Return operation is invalid.");
 
-            return ParseBracketedExpression(expressionArray[1..].ToList());
+            return ParseBracketedExpression(expressionArray[1..^1].ToList());
         }
 
         private Expression ParseConditionalInstructionExpression(List<IToken> expression)

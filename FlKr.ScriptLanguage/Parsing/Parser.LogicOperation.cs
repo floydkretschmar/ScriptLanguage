@@ -77,24 +77,15 @@ namespace FlKr.ScriptLanguage.Parsing
                 if (expression.Count < 2)
                     throw new ParseException(expression, "Invalid negation in expression");
 
-                return Expression.Not(
-                    ParseNotOperationExpression(
-                        expression.GetRange(1, expression.Count - 1), out dataType));
-            }
-
-            // Singular truth value or variable
-            if (expression.Count == 1)
-            {
-                var parsedValue = ParseValueExpression(expression[0], out dataType);
+                var expressionToNegate = ParseNotOperationExpression(
+                    expression.GetRange(1, expression.Count - 1), out dataType);
                 if (dataType != typeof(bool))
                     throw new ParseException(expression,
                         "Invalid negation: Negated value has to return boolean values.");
-                return parsedValue;
+                return Expression.Not(expressionToNegate);
             }
-            else
-            {
-                return ParseEqualsOperationExpression(expression, out dataType);
-            }
+
+            return ParseEqualsOperationExpression(expression, out dataType);
         }
 
         private Expression ParseEqualsOperationExpression(List<IToken> expression, out Type dataType)

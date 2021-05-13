@@ -8,7 +8,7 @@ namespace FlKr.ScriptLanguage.Parsing
 {
     public partial class Parser
     {
-        public Action Parse(List<IToken> tokens)
+        public Func<T> Parse<T>(List<IToken> tokens)
         {
             var expressions = SplitIntoExpressions(tokens, false);
             List<Expression> expressionLambdas = new List<Expression>();
@@ -19,7 +19,7 @@ namespace FlKr.ScriptLanguage.Parsing
                 expressionLambdas.Add(lambda);
             }
             Expression finalExpression = Expression.Block(_variables.Values.ToArray(), expressionLambdas);
-            return Expression.Lambda<Action>(finalExpression).Compile();
+            return Expression.Lambda<Func<T>>(finalExpression).Compile();
         }
 
         private List<List<IToken>> SplitIntoExpressions(List<IToken> tokens, bool block)

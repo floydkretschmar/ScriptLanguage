@@ -92,19 +92,18 @@ namespace FlKr.ScriptLanguage.Parsing
                 if (expression.Count < 2)
                     throw new ParseException(expression, "Invalid unary negative expression");
 
-                return Expression.Negate(
-                    ParseNegativeExpression(
-                        expression.GetRange(1, expression.Count - 1), out dataType));
+                var expressionToNegate = ParseNegativeExpression(
+                        expression.GetRange(1, expression.Count - 1), out dataType);
+                if (dataType != typeof(double))
+                    throw new ParseException(expression,
+                        "Invalid negation: Negated expressions have to return numeric values.");
+                return Expression.Negate(expressionToNegate);
             }
             
             if (expression.Count > 1)
-                throw new ParseException(expression, "Invalid negative value expression.");
+                throw new ParseException(expression, "Invalid value expression.");
 
-            var negatedExpression = ParseValueExpression(expression[0], out dataType);
-            if (dataType != typeof(double) && dataType != typeof(int))
-                throw new ParseException(expression,
-                    "Invalid negation: Negated expressions have to return numeric values.");
-            return negatedExpression;
+            return ParseValueExpression(expression[0], out dataType);
         }
 
         private Expression ParseMathOperationExpression(
@@ -114,19 +113,15 @@ namespace FlKr.ScriptLanguage.Parsing
             out Type dataType)
         {
             var expression = parseOperation(expressions.First(), out dataType);
-            if (dataType != typeof(int) && dataType != typeof(double))
+            if (dataType != typeof(double))
                 throw new ParseException(expressions.First(), "Expression is not a valid numerical expression.");
 
             for (int i = 1; i < expressions.Count; i++)
             {
                 var otherExpression = parseOperation(expressions[i], out var subDataType);
-                if (subDataType != typeof(int) && subDataType != typeof(double))
+                if (subDataType != typeof(double))
                     throw new ParseException(expressions.First(),
                         "Expression is not a valid numerical expression.");
-
-                // only use decimal point math when necessary
-                if (dataType == typeof(int) && subDataType == typeof(double))
-                    dataType = typeof(double);
 
                 expression = expressionDefinition(expression, otherExpression);
             }

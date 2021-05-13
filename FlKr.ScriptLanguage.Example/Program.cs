@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using FlKr.ScriptLanguage.Lexing;
 using FlKr.ScriptLanguage.Lexing.Tokens;
@@ -24,10 +25,14 @@ namespace FlKr.ScriptLanguage.Example
 //             List<IToken> tokens = Lexer.Tokenize(@"
 // A ist (3 + (1 - 2)).");
             List<IToken> tokens = Lexer.Tokenize(@"
-A ist -(3 + -(1 - --2)).");
+A ist -(3,0 + -(1 - --2) * 2).
+B ist 10 / 3.
+
+ergebnis A + B.");
             Parser parser = new Parser();
-            Action func = parser.Parse(tokens);
-            func();
+            Func<double> func = parser.Parse<double>(tokens);
+            var value = func();
+            Debug.Write(value);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace FlKr.ScriptLanguage.Base
+﻿namespace FlKr.ScriptLanguage.Lexing.Tokens
 {
     internal class TokenDefinition
     {

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using FlKr.ScriptLanguage.Base;
+using FlKr.ScriptLanguage.Lexing.Tokens;
 
 namespace FlKr.ScriptLanguage.Lexing
 {
@@ -12,6 +12,8 @@ namespace FlKr.ScriptLanguage.Lexing
             new TokenDefinition(@"^\s", TokenDetailTypes.Whitespace, TokenTypes.Syntax),
             new TokenDefinition(@"^\.", TokenDetailTypes.EndOfLine, TokenTypes.Syntax),
             new TokenDefinition(@"^\b(sowie)\b", TokenDetailTypes.EndOfLineBlock, TokenTypes.Syntax),
+            new TokenDefinition(@"^\(", TokenDetailTypes.LeftBracket, TokenTypes.Syntax),
+            new TokenDefinition(@"^\)", TokenDetailTypes.RightBracket, TokenTypes.Syntax),
             
             new TokenDefinition(@"^'\b(\w+?)\b'", TokenDetailTypes.Text, TokenTypes.Value),
             new TokenDefinition(@"^\b(wahr|falsch)\b", TokenDetailTypes.Boolean, TokenTypes.Value),
@@ -37,9 +39,9 @@ namespace FlKr.ScriptLanguage.Lexing
             new TokenDefinition(@"^\b(\w+?)\b", TokenDetailTypes.VariableName, TokenTypes.Variable)
         };
 
-        public static List<Token> Tokenize(string code)
+        public static List<IToken> Tokenize(string code)
         {
-            List<Token> tokens = new List<Token>();
+            List<IToken> tokens = new List<IToken>();
             var remainingCode = code;
 
             while (remainingCode != string.Empty)

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using FlKr.ScriptLanguage.Base;
 using FlKr.ScriptLanguage.Lexing;
+using FlKr.ScriptLanguage.Lexing.Tokens;
 using FlKr.ScriptLanguage.Parsing;
 
 namespace FlKr.ScriptLanguage.Example
@@ -11,7 +11,7 @@ namespace FlKr.ScriptLanguage.Example
     {
         static void Main(string[] args)
         {
-            List<Token> tokens = Lexer.Tokenize(@"
+            List<IToken> tokens = Lexer.Tokenize(@"
 A ist 3. 
 B ist 4. 
 wahrheit ist falsch.

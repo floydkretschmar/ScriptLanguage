@@ -72,6 +72,23 @@ namespace FlKr.ScriptLanguage.Parsing
                 return ParseMathOperationExpression(
                     parts,
                     Expression.Divide,
+                    ParseModuloOperationExpression,
+                    out dataType);
+
+            return ParseModuloOperationExpression(expression, out dataType);
+        }
+
+        private Expression ParseModuloOperationExpression(List<IToken> expression, out Type dataType)
+        {
+            List<List<IToken>> parts = SplitIntoExpressions(
+                expression,
+                true,
+                TokenDetailTypes.Modulo);
+
+            if (parts.Count > 1)
+                return ParseMathOperationExpression(
+                    parts,
+                    Expression.Modulo,
                     ParseNegativeExpression,
                     out dataType);
 
@@ -92,11 +109,8 @@ namespace FlKr.ScriptLanguage.Parsing
                         "Invalid negation: Negated expressions have to return numeric values.");
                 return Expression.Negate(expressionToNegate);
             }
-            
-            if (expression.Count > 1)
-                throw new ParseException(expression, "Invalid value expression.");
 
-            return ParseValueExpression(expression[0], out dataType);
+            return ParseValueExpression(expression, out dataType);
         }
 
         private Expression ParseMathOperationExpression(

@@ -11,7 +11,7 @@ namespace FlKr.ScriptLanguage.Lexing
         {
             new TokenDefinition(@"^\s", TokenDetailTypes.Whitespace, TokenTypes.Syntax),
             new TokenDefinition(@"^\.", TokenDetailTypes.EndOfLine, TokenTypes.Syntax),
-            new TokenDefinition(@"^\b(sowie)\b", TokenDetailTypes.EndOfLineBlock, TokenTypes.Syntax),
+            new TokenDefinition(@"^,", TokenDetailTypes.EndOfLineBlock, TokenTypes.Syntax),
             new TokenDefinition(@"^\(", TokenDetailTypes.LeftBracket, TokenTypes.Syntax),
             new TokenDefinition(@"^\)", TokenDetailTypes.RightBracket, TokenTypes.Syntax),
 
@@ -82,9 +82,7 @@ namespace FlKr.ScriptLanguage.Lexing
                     }
                 }
 
-                if (token == null)
-                    remainingCode = remainingCode.Remove(0, 1);
-                else if (token.DetailType != TokenDetailTypes.Whitespace)
+                if (token.DetailType != TokenDetailTypes.Whitespace)
                     tokens.Add(token);
             }
 

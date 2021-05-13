@@ -20,7 +20,7 @@ namespace FlKr.ScriptLanguage.Parsing
                 var lambda = ParseExpression(expression);
                 expressionLambdas.Add(lambda);
             }
-            Expression finalExpression = Expression.Block(_variables.Values.ToArray(), expressionLambdas);
+            var finalExpression = Expression.Block(_variables.Values.ToArray(), expressionLambdas);
             return Expression.Lambda<Func<T>>(finalExpression).Compile();
         }
 

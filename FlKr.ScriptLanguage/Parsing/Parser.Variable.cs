@@ -41,8 +41,13 @@ namespace FlKr.ScriptLanguage.Parsing
             return Expression.Assign(parameterExpression, valueExpression);
         }
 
-        private Expression ParseValueExpression(IToken valueToken, out Type dataType)
+        private Expression ParseValueExpression(List<IToken> expression, out Type dataType)
         {
+            if (expression.Count > 1)
+                throw new ParseException(expression, "Invalid value expression.");
+            
+            var valueToken = expression[0];
+            
             switch (valueToken.DetailType)
             {
                 case TokenDetailTypes.True:

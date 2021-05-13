@@ -17,7 +17,7 @@ namespace FlKr.ScriptLanguage.Parsing
             
             foreach (var expression in expressions)
             {
-                var lambda = ParseExpression(expression);
+                var lambda = ParseStatement(expression);
                 expressionLambdas.Add(lambda);
             }
             var finalExpression = Expression.Block(_variables.Values.ToArray(), expressionLambdas);
@@ -56,22 +56,28 @@ namespace FlKr.ScriptLanguage.Parsing
             return expressions;
         }
 
-        private Expression ParseExpression(List<IToken> expression)
+        private Expression ParseStatement(List<IToken> expression)
         {
-            if (expression.Count < 1)
-                throw new ParseException(expression);
+            if (expression.Count < 2)
+                throw new ParseException(expression, "Invalid statement.");
+            
+            if (expression.Last().DetailType != TokenDetailTypes.EndOfLine &&
+                expression.Last().DetailType != TokenDetailTypes.EndOfLineBlock)
+                throw new ParseException(expression, "Invalid end of statement.");
 
             switch (expression.First().Type)
             {
                 case TokenTypes.Variable:
+                    return ParseVariableStatement(expression);
+                case TokenTypes.ControlFlow:
+                    return ParseControlFlowStatement(expression);
                 case TokenTypes.Value:
                 case TokenTypes.LogicOperation:
                 case TokenTypes.MathOperation:
-                    return ParseSingleLineExpression(expression);
                 case TokenTypes.Syntax:
-                    return ParseSyntaxExpression(expression);
-                case TokenTypes.ControlFlow:
-                    return ParseControlFlowExpression(expression);
+                    throw new ParseException(expression,
+                        $"Only expression beginning with tokens from type {nameof(TokenTypes.Variable)} or " +
+                        $"{nameof(TokenTypes.ControlFlow)} can be used as statements.");
                 default:
                     throw new ParseException($"Token type {expression.First().Type} not implemented yet.");
             }

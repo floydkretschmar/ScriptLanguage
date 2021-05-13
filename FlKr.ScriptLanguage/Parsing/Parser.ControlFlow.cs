@@ -8,7 +8,7 @@ namespace FlKr.ScriptLanguage.Parsing
 {
     public partial class Parser
     {
-        private Expression ParseControlFlowExpression(List<IToken> expression)
+        private Expression ParseControlFlowStatement(List<IToken> expression)
         {
             switch (expression.First().DetailType)
             {

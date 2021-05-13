@@ -8,42 +8,16 @@ namespace FlKr.ScriptLanguage.Parsing
 {
     public partial class Parser
     {
-        private Expression ParseSyntaxExpression(List<IToken> expression)
+        private Expression ParseVariableStatement(List<IToken> expression)
         {
-            switch (expression.First().DetailType)
-            {
-                case TokenDetailTypes.EndOfLine:
-                    throw new ParseException(expression,
-                        $"Tokens from type {nameof(TokenDetailTypes.EndOfLine)} can never be the leading token in an expression");
-                case TokenDetailTypes.EndOfLineBlock:
-                    throw new ParseException(expression,
-                        $"Tokens from type {nameof(TokenDetailTypes.EndOfLineBlock)} can never be the leading token in an expression");
-                case TokenDetailTypes.RightBracket:
-                    throw new ParseException(expression,
-                        $"Tokens from type {nameof(TokenDetailTypes.RightBracket)} can never be the leading token in an expression");
-                case TokenDetailTypes.LeftBracket:
-                case TokenDetailTypes.Expression:
-                    return ParseSingleLineExpression(expression);
-                default:
-                    throw new ParseException(
-                        $"Token detail type {expression.First().DetailType} not implemented yet for token type {expression.First().Type}");
-            }
-        }
-        
-        private Expression ParseSingleLineExpression(List<IToken> expression)
-        {
-            if (expression.Last().DetailType != TokenDetailTypes.EndOfLine &&
-                expression.Last().DetailType != TokenDetailTypes.EndOfLineBlock)
-                throw new ParseException(expression, "Invalid expression end.");
-
             var expressionWithoutEndToken = expression.SkipLast(1).ToList();
             var assignmentTokenCount = expressionWithoutEndToken.Count(token => token.DetailType == TokenDetailTypes.Assignment);
             if (assignmentTokenCount > 1)
-                throw new ParseException(expressionWithoutEndToken, "Only one assignment per expression is allowed.");
-            if (assignmentTokenCount == 1)
+                throw new ParseException(expression, "Only one assignment per expression is allowed.");
+            if (assignmentTokenCount < 1)
+                throw new ParseException(expression, $"Only variable expression from type {nameof(TokenDetailTypes.Assignment)} can be used as statement");
+            else
                 return ParseVariableAssignmentExpression(expressionWithoutEndToken);
-
-            return ParseBracketedExpression(expressionWithoutEndToken);
         }
 
         private Expression ParseBracketedExpression(List<IToken> expression)

@@ -75,13 +75,13 @@ namespace FlKr.ScriptLanguage.Parsing
             if (expression.First().DetailType == TokenDetailTypes.Not)
             {
                 if (expression.Count < 2)
-                    throw new ParseException(expression, "Invalid negation in expression");
+                    throw new ParseException(expression, "Invalid negation expression");
 
                 var expressionToNegate = ParseNotOperationExpression(
                     expression.GetRange(1, expression.Count - 1), out dataType);
                 if (dataType != typeof(bool))
                     throw new ParseException(expression,
-                        "Invalid negation: Negated value has to return boolean values.");
+                        "Expression is not a valid boolean expression.");
                 return Expression.Not(expressionToNegate);
             }
 

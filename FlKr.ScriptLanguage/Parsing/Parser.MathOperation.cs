@@ -100,13 +100,13 @@ namespace FlKr.ScriptLanguage.Parsing
             if (expression.First().DetailType == TokenDetailTypes.Negative)
             {
                 if (expression.Count < 2)
-                    throw new ParseException(expression, "Invalid unary negative expression");
+                    throw new ParseException(expression, "Invalid negative numeric expression");
 
                 var expressionToNegate = ParseNegativeExpression(
                         expression.GetRange(1, expression.Count - 1), out dataType);
                 if (dataType != typeof(double))
                     throw new ParseException(expression,
-                        "Invalid negation: Negated expressions have to return numeric values.");
+                        "Expression is not a valid numerical expression.");
                 return Expression.Negate(expressionToNegate);
             }
 

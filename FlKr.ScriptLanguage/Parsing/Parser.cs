@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using FlKr.ScriptLanguage.Lexing.Tokens;
@@ -7,15 +8,18 @@ namespace FlKr.ScriptLanguage.Parsing
 {
     public partial class Parser
     {
-        public LambdaExpression Parse(List<IToken> tokens)
+        public Action Parse(List<IToken> tokens)
         {
             var expressions = SplitIntoExpressions(tokens, false);
+            List<Expression> expressionLambdas = new List<Expression>();
+            
             foreach (var expression in expressions)
             {
                 var lambda = ParseExpression(expression);
+                expressionLambdas.Add(lambda);
             }
-
-            return null;
+            Expression finalExpression = Expression.Block(_variables.Values.ToArray(), expressionLambdas);
+            return Expression.Lambda<Action>(finalExpression).Compile();
         }
 
         private List<List<IToken>> SplitIntoExpressions(List<IToken> tokens, bool block)
@@ -31,21 +35,22 @@ namespace FlKr.ScriptLanguage.Parsing
         {
             var expressions = new List<List<IToken>>();
             var expression = new List<IToken>();
+            expressions.Add(expression);
 
             var splitters = new List<TokenDetailTypes>() {splitter};
             splitters.AddRange(types);
 
             foreach (var token in tokens)
             {
-                expression.Add(token);
+                if (!splitters.Contains(token.DetailType) || !removeSplitter)
+                    expression.Add(token);
 
-                if (splitters.Contains(token.DetailType))
+                if (splitters.Contains(token.DetailType) && (tokens.IndexOf(token) + 1) < tokens.Count)
                 {
-                    expressions.Add(expression);
                     expression = new List<IToken>();
                 }
             }
-
+            
             return expressions;
         }
 

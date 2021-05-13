@@ -32,13 +32,18 @@ namespace FlKr.ScriptLanguage.Parsing
         
         private Expression ParseSingleLineExpression(List<IToken> expression)
         {
-            var assignmentTokens = expression.Select(token => token.DetailType == TokenDetailTypes.Assignment);
-            if (assignmentTokens.Count() > 1)
-                throw new ParseException(expression, "Only one assignment per expression is allowed.");
-            if (assignmentTokens.Count() == 1)
-                return ParseVariableAssignmentExpression(expression);
+            if (expression.Last().DetailType != TokenDetailTypes.EndOfLine &&
+                expression.Last().DetailType != TokenDetailTypes.EndOfLineBlock)
+                throw new ParseException(expression, "Invalid expression end.");
 
-            return ParseBracketedExpression(expression);
+            var expressionWithoutEndToken = expression.SkipLast(1).ToList();
+            var assignmentTokenCount = expressionWithoutEndToken.Count(token => token.DetailType == TokenDetailTypes.Assignment);
+            if (assignmentTokenCount > 1)
+                throw new ParseException(expressionWithoutEndToken, "Only one assignment per expression is allowed.");
+            if (assignmentTokenCount == 1)
+                return ParseVariableAssignmentExpression(expressionWithoutEndToken);
+
+            return ParseBracketedExpression(expressionWithoutEndToken);
         }
 
         private Expression ParseBracketedExpression(List<IToken> expression)
@@ -48,8 +53,8 @@ namespace FlKr.ScriptLanguage.Parsing
 
         private Expression ParseBracketedExpression(List<IToken> expression, out Type dataType)
         {
-            var leftBracketCount = expression.Select(t => t.DetailType == TokenDetailTypes.LeftBracket).Count();
-            var rightBracketCount = expression.Select(t => t.DetailType == TokenDetailTypes.RightBracket).Count();
+            var leftBracketCount = expression.Count(t => t.DetailType == TokenDetailTypes.LeftBracket);
+            var rightBracketCount = expression.Count(t => t.DetailType == TokenDetailTypes.RightBracket);
 
             if (leftBracketCount != rightBracketCount)
                 throw new ParseException(expression, "Unequal amount of brackets detected in expression.");

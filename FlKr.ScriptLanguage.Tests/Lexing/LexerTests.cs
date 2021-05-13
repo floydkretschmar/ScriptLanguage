@@ -9,7 +9,6 @@ namespace FlKr.ScriptLanguage.Tests.Lexing
     {
         [Test]
         [TestCase(".", TokenTypes.Syntax, TokenDetailTypes.EndOfLine)]
-        [TestCase(",", TokenTypes.Syntax, TokenDetailTypes.EndOfLineBlock)]
         [TestCase("(", TokenTypes.Syntax, TokenDetailTypes.LeftBracket)]
         [TestCase(")", TokenTypes.Syntax, TokenDetailTypes.RightBracket)]
         [TestCase("'abc'", TokenTypes.Value, TokenDetailTypes.Text)]

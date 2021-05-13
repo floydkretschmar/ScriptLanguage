@@ -15,7 +15,6 @@
         // Syntax
         Whitespace,
         EndOfLine,
-        EndOfLineBlock,
         Expression,
         LeftBracket,
         RightBracket,
@@ -53,6 +52,7 @@
         If,
         Then,
         Else,
+        EndOfControlFlowOperation,
         Return
     }
 }

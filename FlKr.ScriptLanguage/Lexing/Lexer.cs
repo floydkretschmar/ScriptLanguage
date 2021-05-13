@@ -11,7 +11,6 @@ namespace FlKr.ScriptLanguage.Lexing
         {
             new TokenDefinition(@"^\s", TokenDetailTypes.Whitespace, TokenTypes.Syntax),
             new TokenDefinition(@"^\.", TokenDetailTypes.EndOfLine, TokenTypes.Syntax),
-            new TokenDefinition(@"^,", TokenDetailTypes.EndOfLineBlock, TokenTypes.Syntax),
             new TokenDefinition(@"^\(", TokenDetailTypes.LeftBracket, TokenTypes.Syntax),
             new TokenDefinition(@"^\)", TokenDetailTypes.RightBracket, TokenTypes.Syntax),
 
@@ -39,6 +38,7 @@ namespace FlKr.ScriptLanguage.Lexing
             new TokenDefinition(@"^\b(wenn)\b", TokenDetailTypes.If, TokenTypes.ControlFlow),
             new TokenDefinition(@"^\b(dann)\b", TokenDetailTypes.Then, TokenTypes.ControlFlow),
             new TokenDefinition(@"^\b(sonst)\b", TokenDetailTypes.Else, TokenTypes.ControlFlow),
+            new TokenDefinition(@"^\b(machen)\b", TokenDetailTypes.EndOfControlFlowOperation, TokenTypes.ControlFlow),
             new TokenDefinition(@"^ergebnis", TokenDetailTypes.Return, TokenTypes.ControlFlow),
 
             new TokenDefinition(@"^ist", TokenDetailTypes.Assignment, TokenTypes.Variable),
@@ -82,7 +82,9 @@ namespace FlKr.ScriptLanguage.Lexing
                     }
                 }
 
-                if (token.DetailType != TokenDetailTypes.Whitespace)
+                if (token == null)
+                    remainingCode = remainingCode.Remove(0, 1);
+                else if (token.DetailType != TokenDetailTypes.Whitespace)
                     tokens.Add(token);
             }
 

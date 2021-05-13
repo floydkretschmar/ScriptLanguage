@@ -76,7 +76,7 @@ namespace FlKr.ScriptLanguage.Parsing
             subexpression.Clear();
             // Get the execution block
             while (expression[position].DetailType != TokenDetailTypes.Else &&
-                   expression[position].DetailType != TokenDetailTypes.EndOfLine)
+                   expression[position].DetailType != TokenDetailTypes.EndOfControlFlowOperation)
             {
                 subexpression.Add(expression[position]);
                 position++;
@@ -93,7 +93,7 @@ namespace FlKr.ScriptLanguage.Parsing
             {
                 position++;
                 subexpression.Clear();
-                while (expression[position].DetailType != TokenDetailTypes.EndOfLine)
+                while (expression[position].DetailType != TokenDetailTypes.EndOfControlFlowOperation)
                 {
                     subexpression.Add(expression[position]);
                     position++;
@@ -120,12 +120,33 @@ namespace FlKr.ScriptLanguage.Parsing
 
         private Expression ParseConditionExpression(List<IToken> expression)
         {
-            throw new NotImplementedException();
+            if (expression.Any(t => t.DetailType == TokenDetailTypes.EndOfLine))
+                throw new ParseException(expression, "Conditions cannot contain end of statement tokens.");
+            
+            if (expression.Any(t => t.DetailType == TokenDetailTypes.Assignment))
+                throw new ParseException(expression, "Conditions cannot contain assignment tokens.");
+
+            switch (expression.First().Type)
+            {
+                case TokenTypes.ControlFlow:
+                    throw new ParseException(expression, "Conditions cannot contain control flow tokens.");
+                case TokenTypes.Variable:
+                case TokenTypes.Value:
+                case TokenTypes.LogicOperation:
+                case TokenTypes.MathOperation:
+                case TokenTypes.Syntax:
+                    var condition = ParseBracketedExpression(expression, out var dataType);
+                    if (dataType != typeof(bool))
+                        throw new ParseException("Conditions is not a valid boolean expression.");
+                    return condition;
+                default:
+                    throw new ParseException($"Token type {expression.First().Type} not implemented yet.");
+            }
         }
 
         private Expression ParseBlockExpression(List<IToken> expression)
         {
-            throw new NotImplementedException();
+            return ParseStatements(expression);
         }
     }
 }

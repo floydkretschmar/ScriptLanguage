@@ -17,8 +17,8 @@ namespace FlKr.ScriptLanguage.Example
 // B ist 4. 
 // wahrheit ist falsch.
 //
-// wenn A + B gleich 7 und nicht wahrheit dann
-// C ist A + 5 sowie
+// wenn A + B = 7 und nicht wahrheit dann
+// C ist A + 5,
 // ergebnis C
 // sonst
 // ergebnis A + B.");
@@ -30,10 +30,14 @@ namespace FlKr.ScriptLanguage.Example
 //
 // ergebnis A + B.");
             List<IToken> tokens = Lexer.Tokenize(@"
-A ist 1 + 2 <= 5 und falsch.
-B ist nicht 1 + 1 = 2.
+A ist falsch.
 
-ergebnis A oder B.");
+wenn A und 1 + 1 = 2 dann
+C ist 3.
+ergebnis C.
+sonst
+ergebnis 4.
+machen.");
             Parser parser = new Parser();
             Func<bool> func = parser.Parse<bool>(tokens);
             var value = func();

@@ -63,6 +63,36 @@ namespace FlKr.ScriptLanguage.Tests.Parsing
             
             Assert.That(result, Is.EqualTo("'Test'"));
         }
+        
+        [Test]
+        public void Parse_IfThen_ReturnsConditionalResult()
+        {
+            var script = @$"
+wenn 1 + 1 = 2 und wahr dann
+C ist 3,
+ergebnis C.";
+
+            var func = _parser.Parse<string>(Lexer.Tokenize(script));
+            var result = func();
+            
+            Assert.That(result, Is.EqualTo(3));
+        }
+        
+        [Test]
+        public void Parse_IfThenElse_ReturnsConditionalResult()
+        {
+            var script = @$"
+wenn falsch dann
+C ist 3,
+ergebnis C,
+sonst
+ergebnis 4.";
+
+            var func = _parser.Parse<string>(Lexer.Tokenize(script));
+            var result = func();
+            
+            Assert.That(result, Is.EqualTo(4));
+        }
 
         [Test]
         public void Parse_AssignmentOperation_AssignsValue()

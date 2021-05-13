@@ -12,7 +12,13 @@ namespace FlKr.ScriptLanguage.Parsing
     {
         public Func<T> Parse<T>(List<IToken> tokens)
         {
-            var expressions = SplitIntoExpressions(tokens, false);
+            var finalExpression = ParseStatements(tokens);
+            return Expression.Lambda<Func<T>>(finalExpression).Compile();
+        }
+
+        private Expression ParseStatements(List<IToken> tokens)
+        {
+            var expressions = SplitIntoStatements(tokens);
             List<Expression> expressionLambdas = new List<Expression>();
             
             foreach (var expression in expressions)
@@ -20,14 +26,45 @@ namespace FlKr.ScriptLanguage.Parsing
                 var lambda = ParseStatement(expression);
                 expressionLambdas.Add(lambda);
             }
-            var finalExpression = Expression.Block(_variables.Values.ToArray(), expressionLambdas);
-            return Expression.Lambda<Func<T>>(finalExpression).Compile();
+            return Expression.Block(_variables.Values.ToArray(), expressionLambdas);
         }
 
-        private List<List<IToken>> SplitIntoExpressions(List<IToken> tokens, bool block)
+        private List<List<IToken>> SplitIntoStatements(List<IToken> tokens)
         {
-            return SplitIntoExpressions(tokens, false,
-                block ? TokenDetailTypes.EndOfLineBlock : TokenDetailTypes.EndOfLine);
+            var expressions = SplitIntoExpressions(tokens, false, TokenDetailTypes.EndOfLine);
+
+            var mergedExpressions = new List<List<IToken>>();
+            var mergedExpression = new List<IToken>();
+            bool merging = false;
+            foreach (var expression in expressions)
+            {
+                if (expression.First().DetailType == TokenDetailTypes.If)
+                {
+                    if (merging)
+                        throw new ParseException(tokens, "Invalid conditional expression.");
+                    mergedExpression = new List<IToken>();
+                    mergedExpression.AddRange(expression);
+                    merging = true;
+                }
+                else if (expression.First().DetailType == TokenDetailTypes.EndOfControlFlowOperation)
+                {
+                    if (!merging)
+                        throw new ParseException(tokens, "Invalid conditional expression.");
+                    mergedExpression.AddRange(expression);
+                    mergedExpressions.Add(mergedExpression);
+                    merging = false;
+                }
+                else if (merging)
+                {
+                    mergedExpression.AddRange(expression);
+                }
+                else
+                {
+                    mergedExpressions.Add(expression);
+                }
+            }
+
+            return mergedExpressions;
         }
 
         private List<List<IToken>> SplitIntoExpressions(List<IToken> tokens,
@@ -61,8 +98,7 @@ namespace FlKr.ScriptLanguage.Parsing
             if (expression.Count < 2)
                 throw new ParseException(expression, "Invalid statement.");
             
-            if (expression.Last().DetailType != TokenDetailTypes.EndOfLine &&
-                expression.Last().DetailType != TokenDetailTypes.EndOfLineBlock)
+            if (expression.Last().DetailType != TokenDetailTypes.EndOfLine)
                 throw new ParseException(expression, "Invalid end of statement.");
 
             switch (expression.First().Type)

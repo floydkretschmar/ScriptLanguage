@@ -22,6 +22,7 @@ namespace FlKr.ScriptLanguage.Tests.Parsing
         [TestCase("(2,5 - 1) * 2", 3)]
         [TestCase("10 % 3", 1)]
         [TestCase("2^2", 4)]
+        [TestCase("-2^2", -4)]
         public void Parse_MathOperations_ReturnsSpecifiedExpression(string expression, double expectedResult)
         {
             var script = $"ergebnis {expression}.";

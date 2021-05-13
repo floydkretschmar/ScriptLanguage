@@ -110,6 +110,23 @@ namespace FlKr.ScriptLanguage.Parsing
                 return Expression.Negate(expressionToNegate);
             }
 
+            return ParseExponentiateOperationExpression(expression, out dataType);
+        }
+        
+        private Expression ParseExponentiateOperationExpression(List<IToken> expression, out Type dataType)
+        {
+            List<List<IToken>> parts = SplitIntoExpressions(
+                expression,
+                true,
+                TokenDetailTypes.Exponentiation);
+
+            if (parts.Count > 1)
+                return ParseMathOperationExpression(
+                    parts,
+                    Expression.Power,
+                    ParseValueExpression,
+                    out dataType);
+
             return ParseValueExpression(expression, out dataType);
         }
 

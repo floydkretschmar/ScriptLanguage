@@ -25,8 +25,9 @@ namespace FlKr.ScriptLanguage.Example
 // A ist (3 + (1 - 2)).");
             List<IToken> tokens = Lexer.Tokenize(@"
 A ist -(3 + -(1 - --2)).");
-            // Parser parser = new Parser();
-            // Action func = parser.Parse(tokens);
+            Parser parser = new Parser();
+            Action func = parser.Parse(tokens);
+            func();
         }
     }
 }

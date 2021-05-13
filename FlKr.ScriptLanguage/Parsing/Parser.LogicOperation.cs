@@ -91,15 +91,9 @@ namespace FlKr.ScriptLanguage.Parsing
                         "Invalid negation: Negated value has to return boolean values.");
                 return parsedValue;
             }
-            // equality expression
             else
             {
-                var expressionValue = ParseEqualsOperationExpression(expression, out dataType);
-                if (dataType != typeof(bool))
-                    throw new ParseException(expression,
-                        "Invalid negation: Negated expressions have to return boolean values.");
-
-                return expressionValue;
+                return ParseEqualsOperationExpression(expression, out dataType);
             }
         }
 
@@ -110,11 +104,11 @@ namespace FlKr.ScriptLanguage.Parsing
                 true,
                 TokenDetailTypes.Equals);
 
-            if (equalsConditions.Count != 2)
+            if (equalsConditions.Count > 2)
             {
                 throw new ParseException(expression, "Invalid equality expression");
             }
-            else
+            else if (equalsConditions.Count == 2)
             {
                 var leftPart = ParseAdditionOperationExpression(equalsConditions[0], out var leftSubType);
                 var rightPart = ParseAdditionOperationExpression(equalsConditions[1], out var rightSubType);
@@ -124,6 +118,10 @@ namespace FlKr.ScriptLanguage.Parsing
 
                 dataType = typeof(bool);
                 return Expression.Equal(leftPart, rightPart);
+            }
+            else
+            {
+                return ParseAdditionOperationExpression(expression, out dataType);
             }
         }
     }

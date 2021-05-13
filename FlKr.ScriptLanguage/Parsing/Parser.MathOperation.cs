@@ -107,41 +107,6 @@ namespace FlKr.ScriptLanguage.Parsing
             return negatedExpression;
         }
 
-        private Expression ParseValueExpression(IToken valueToken, out Type dataType)
-        {
-            switch (valueToken.DetailType)
-            {
-                case TokenDetailTypes.True:
-                    dataType = typeof(bool);
-                    return Expression.Constant(true, dataType);
-                case TokenDetailTypes.False:
-                    dataType = typeof(bool);
-                    return Expression.Constant(false, dataType);
-                case TokenDetailTypes.FloatingPoint:
-                    dataType = typeof(double);
-                    return Expression.Constant(double.Parse(((Token) valueToken).Value), dataType);
-                case TokenDetailTypes.Integer:
-                    dataType = typeof(int);
-                    return Expression.Constant(int.Parse(((Token) valueToken).Value), dataType);
-                case TokenDetailTypes.Text:
-                    dataType = typeof(string);
-                    return Expression.Constant(((Token) valueToken).Value, dataType);
-                case TokenDetailTypes.Expression:
-                    var expressionToken = (ExpressionToken) valueToken;
-                    dataType = expressionToken.DataType;
-                    return expressionToken.Value;
-                case TokenDetailTypes.VariableName:
-                    if (!_variables.TryGetValue(((Token) valueToken).Value, out var variable))
-                        throw new ParseException(new List<IToken>() {valueToken}, "Variable has not been declared.");
-                    dataType = variable.Type;
-                    return variable;
-                default:
-                    throw new ParseException(new List<IToken>() {valueToken},
-                        $"The token type {valueToken.DetailType} is not a valid value expression.");
-            }
-        }
-
-
         private Expression ParseMathOperationExpression(
             List<List<IToken>> expressions,
             Func<Expression, Expression, BinaryExpression> expressionDefinition,

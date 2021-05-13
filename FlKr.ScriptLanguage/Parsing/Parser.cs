@@ -43,11 +43,11 @@ namespace FlKr.ScriptLanguage.Parsing
             foreach (var token in tokens)
             {
                 if (!splitters.Contains(token.DetailType) || !removeSplitter)
-                    expression.Add(token);
+                    expressions.Last().Add(token);
 
                 if (splitters.Contains(token.DetailType) && (tokens.IndexOf(token) + 1) < tokens.Count)
                 {
-                    expression = new List<IToken>();
+                    expressions.Add(new List<IToken>());
                 }
             }
             

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using FlKr.ScriptLanguage.Lexing.Tokens;
@@ -29,7 +30,7 @@ namespace FlKr.ScriptLanguage.Parsing
                     $"Second token of a variable value assignment has to be a {nameof(TokenDetailTypes.Assignment)}");
 
             var valueExpression = ParseBracketedExpression(expression.ToArray()[2..].ToList(), out var dataType);
-            var variableName = ((Token) expression[1]).Value;
+            var variableName = ((Token) expression[0]).Value;
 
             if (!_variables.TryGetValue(variableName, out var parameterExpression))
             {
@@ -38,6 +39,40 @@ namespace FlKr.ScriptLanguage.Parsing
             }
 
             return Expression.Assign(parameterExpression, valueExpression);
+        }
+
+        private Expression ParseValueExpression(IToken valueToken, out Type dataType)
+        {
+            switch (valueToken.DetailType)
+            {
+                case TokenDetailTypes.True:
+                    dataType = typeof(bool);
+                    return Expression.Constant(true, dataType);
+                case TokenDetailTypes.False:
+                    dataType = typeof(bool);
+                    return Expression.Constant(false, dataType);
+                case TokenDetailTypes.FloatingPoint:
+                    dataType = typeof(double);
+                    return Expression.Constant(double.Parse(((Token) valueToken).Value), dataType);
+                case TokenDetailTypes.Integer:
+                    dataType = typeof(int);
+                    return Expression.Constant(int.Parse(((Token) valueToken).Value), dataType);
+                case TokenDetailTypes.Text:
+                    dataType = typeof(string);
+                    return Expression.Constant(((Token) valueToken).Value, dataType);
+                case TokenDetailTypes.Expression:
+                    var expressionToken = (ExpressionToken) valueToken;
+                    dataType = expressionToken.DataType;
+                    return expressionToken.Value;
+                case TokenDetailTypes.VariableName:
+                    if (!_variables.TryGetValue(((Token) valueToken).Value, out var variable))
+                        throw new ParseException(new List<IToken>() {valueToken}, "Variable has not been declared.");
+                    dataType = variable.Type;
+                    return variable;
+                default:
+                    throw new ParseException(new List<IToken>() {valueToken},
+                        $"The token type {valueToken.DetailType} is not a valid value expression.");
+            }
         }
     }
 }

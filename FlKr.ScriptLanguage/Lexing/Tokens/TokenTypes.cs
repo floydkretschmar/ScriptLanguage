@@ -16,6 +16,7 @@
         Whitespace,
         EndOfLine,
         Expression,
+        BlockExpression,
         LeftBracket,
         RightBracket,
         
@@ -52,7 +53,8 @@
         If,
         Then,
         Else,
-        EndOfControlFlowOperation,
+        BeginBlock,
+        EndBlock,
         Return
     }
 }

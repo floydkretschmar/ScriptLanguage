@@ -12,36 +12,29 @@ namespace FlKr.ScriptLanguage.Example
     {
         static void Main(string[] args)
         {
-//             List<IToken> tokens = Lexer.Tokenize(@"
-// A ist 3. 
-// B ist 4. 
-// wahrheit ist falsch.
-//
-// wenn A + B = 7 und nicht wahrheit dann
-// C ist A + 5,
-// ergebnis C
-// sonst
-// ergebnis A + B.");
-//             List<IToken> tokens = Lexer.Tokenize(@"
-// A ist (3 + (1 - 2)).");
-//             List<IToken> tokens = Lexer.Tokenize(@"
-// A ist -(3,0 + -(1 - --2) * 2).
-// B ist 10 / 3.
-//
-// ergebnis A + B.");
-            List<IToken> tokens = Lexer.Tokenize(@"
-A ist falsch.
-
-wenn A und 1 + 1 = 2 dann
-C ist 3.
-ergebnis C.
-sonst
-ergebnis 4.
-machen.");
+            var code = Example1();
+            Console.WriteLine("----------- Code -----------");
+            Console.WriteLine(code);
+            Console.WriteLine("----------- Start tokenizing -----------");
+            List<IToken> tokens = Lexer.Tokenize(code);
+            Console.WriteLine("----------- Finished tokenizing -----------");
             Parser parser = new Parser();
+            Console.WriteLine("----------- Start parsing -----------");
             Func<double> func = parser.Parse<double>(tokens);
+            Console.WriteLine("----------- Finished parsing -----------");
             var value = func();
-            Debug.Write(value);
+            Console.WriteLine($"Result: {value}");
+        }
+
+        static string Example1()
+        {
+            return @"
+A ist wahr.
+
+wenn A und 1 + 1 = 2 dann {
+    C ist 3.
+    ergebnis C.
+} sonst ergebnis 4.";
         }
     }
 }

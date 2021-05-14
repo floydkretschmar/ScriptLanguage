@@ -38,7 +38,8 @@ namespace FlKr.ScriptLanguage.Lexing
             new TokenDefinition(@"^\b(wenn)\b", TokenDetailTypes.If, TokenTypes.ControlFlow),
             new TokenDefinition(@"^\b(dann)\b", TokenDetailTypes.Then, TokenTypes.ControlFlow),
             new TokenDefinition(@"^\b(sonst)\b", TokenDetailTypes.Else, TokenTypes.ControlFlow),
-            new TokenDefinition(@"^\b(machen)\b", TokenDetailTypes.EndOfControlFlowOperation, TokenTypes.ControlFlow),
+            new TokenDefinition(@"^{", TokenDetailTypes.BeginBlock, TokenTypes.ControlFlow),
+            new TokenDefinition(@"^}", TokenDetailTypes.EndBlock, TokenTypes.ControlFlow),
             new TokenDefinition(@"^ergebnis", TokenDetailTypes.Return, TokenTypes.ControlFlow),
 
             new TokenDefinition(@"^ist", TokenDetailTypes.Assignment, TokenTypes.Variable),

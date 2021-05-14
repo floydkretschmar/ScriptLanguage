@@ -82,47 +82,60 @@ namespace FlKr.ScriptLanguage.Parsing
             Expression conditionLambda = ParseConditionExpression(subexpression, context);
 
             position++;
-            subexpression.Clear();
-            // Get the execution block
-            while (expression[position].DetailType != TokenDetailTypes.Else &&
-                   expression[position].DetailType != TokenDetailTypes.EndOfControlFlowOperation)
+            Expression blockLambda = null;
+            if (expression[position].DetailType == TokenDetailTypes.BlockExpression)
             {
-                subexpression.Add(expression[position]);
-                position++;
-                if (position >= expression.Count)
-                    throw new ParseException(expression,
-                        $"Control flow operation was not terminated correctly in the execution block.");
+                blockLambda = ((ExpressionToken) expression[position]).Value;
             }
-
-            Expression blockLambda = ParseBlockExpression(subexpression, context);
-
-            Expression controlFlowLambda = null;
-            // Get the alternate execution block
-            if (expression[position].DetailType == TokenDetailTypes.Else)
+            else
             {
-                position++;
                 subexpression.Clear();
-                while (expression[position].DetailType != TokenDetailTypes.EndOfControlFlowOperation)
+                // Get the execution block
+                while (expression[position].DetailType != TokenDetailTypes.Else)
                 {
                     subexpression.Add(expression[position]);
                     position++;
                     if (position >= expression.Count)
                         throw new ParseException(expression,
-                            $"Control flow operation was not terminated correctly in the alternate execution block.");
+                            $"Control flow operation was not terminated correctly in the execution block.");
+                }
+                subexpression.Add(new Token() { Type = TokenTypes.Syntax, DetailType = TokenDetailTypes.EndOfLine});
+                blockLambda = ParseStatement(subexpression, context);
+            }
+
+            position++;
+            Expression controlFlowLambda = null;
+            // Get the alternate execution block
+            if (expression[position].DetailType == TokenDetailTypes.Else)
+            {
+                position++;
+                Expression alternateBlockLambda = null;
+                if (expression[position].DetailType == TokenDetailTypes.BlockExpression)
+                {
+                    alternateBlockLambda = ((ExpressionToken) expression[position]).Value;
+                }
+                else
+                {
+                    subexpression.Clear();
+                    while (expression[position].DetailType != TokenDetailTypes.EndOfLine)
+                    {
+                        subexpression.Add(expression[position]);
+                        position++;
+                        if (position >= expression.Count)
+                            throw new ParseException(expression,
+                                $"Control flow operation was not terminated correctly in the alternate execution block.");
+                    }
+                    subexpression.Add(expression[position]);
+
+                    alternateBlockLambda = ParseStatement(subexpression, context);
                 }
 
-                Expression alternateBlockLambda = ParseBlockExpression(subexpression, context);
                 controlFlowLambda = Expression.IfThenElse(conditionLambda, blockLambda, alternateBlockLambda);
             }
             else
             {
                 controlFlowLambda = Expression.IfThen(conditionLambda, blockLambda);
             }
-
-            position++;
-            if (position >= expression.Count || expression[position].DetailType != TokenDetailTypes.EndOfLine)
-                throw new ParseException(expression,
-                    $"Control flow operation was not terminated with a {nameof(TokenDetailTypes.EndOfLine)} token.");
 
             return controlFlowLambda;
         }
@@ -156,8 +169,17 @@ namespace FlKr.ScriptLanguage.Parsing
         private Expression ParseBlockExpression(List<IToken> expression, ParsingContext context)
         {
             var blockContext = new ParsingContext(context);
-            var statements = ParseStatements(expression, blockContext);
-            return Expression.Block(blockContext.GetVariables(), statements);
+
+            if (expression.Last().DetailType == TokenDetailTypes.EndOfLine)
+            {
+                var statements = ParseStatements(expression, blockContext);
+                return Expression.Block(blockContext.GetVariables(), statements);
+            }
+            else
+            {
+                var statement = ParseStatement(expression, blockContext);
+                return Expression.Block(blockContext.GetVariables(), statement);
+            }
         }
     }
 }

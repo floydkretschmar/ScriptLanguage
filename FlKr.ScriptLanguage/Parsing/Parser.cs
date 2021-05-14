@@ -31,44 +31,6 @@ namespace FlKr.ScriptLanguage.Parsing
             return Expression.Lambda<Func<T>>(finalExpression).Compile();
         }
 
-        private List<List<IToken>> SplitIntoStatements(List<IToken> tokens)
-        {
-            var expressions = SplitIntoExpressions(tokens, false, TokenDetailTypes.EndOfLine);
-
-            var mergedExpressions = new List<List<IToken>>();
-            var mergedExpression = new List<IToken>();
-            bool merging = false;
-            foreach (var expression in expressions)
-            {
-                if (expression.First().DetailType == TokenDetailTypes.If)
-                {
-                    if (merging)
-                        throw new ParseException(tokens, "Invalid conditional expression.");
-                    mergedExpression = new List<IToken>();
-                    mergedExpression.AddRange(expression);
-                    merging = true;
-                }
-                else if (expression.First().DetailType == TokenDetailTypes.EndOfControlFlowOperation)
-                {
-                    if (!merging)
-                        throw new ParseException(tokens, "Invalid conditional expression.");
-                    mergedExpression.AddRange(expression);
-                    mergedExpressions.Add(mergedExpression);
-                    merging = false;
-                }
-                else if (merging)
-                {
-                    mergedExpression.AddRange(expression);
-                }
-                else
-                {
-                    mergedExpressions.Add(expression);
-                }
-            }
-
-            return mergedExpressions;
-        }
-
         private List<List<IToken>> SplitIntoExpressions(List<IToken> tokens,
             bool removeSplitter,
             TokenDetailTypes splitter,
@@ -97,7 +59,7 @@ namespace FlKr.ScriptLanguage.Parsing
 
         private List<Expression> ParseStatements(List<IToken> tokens, ParsingContext context)
         {
-            var expressions = SplitIntoStatements(tokens);
+            var expressions = ParseBlockExpressions(tokens, context);
             List<Expression> expressionLambdas = new List<Expression>();
             
             foreach (var expression in expressions)
@@ -106,6 +68,62 @@ namespace FlKr.ScriptLanguage.Parsing
                 expressionLambdas.Add(lambda);
             }
             return expressionLambdas;
+        }
+
+        private List<List<IToken>> ParseBlockExpressions(List<IToken> tokens, ParsingContext context)
+        {
+            var beginBlockCount = tokens.Count(t => t.DetailType == TokenDetailTypes.BeginBlock);
+            var endBlockCount = tokens.Count(t => t.DetailType == TokenDetailTypes.EndBlock);
+
+            if (beginBlockCount != endBlockCount)
+                throw new ParseException(tokens, "Unequal amount of block start and end tokens detected in expression.");
+
+            if (beginBlockCount == 0 && endBlockCount == 0)
+                return SplitIntoExpressions(tokens, false, TokenDetailTypes.EndOfLine);
+
+            var decomposedExpression = new List<IToken>();
+            var blockExpressions = new Stack<List<IToken>>();
+            beginBlockCount = 0;
+            endBlockCount = 0;
+            foreach (var token in tokens)
+            {
+                // New bracketed expression starts: Put it on top of the stack
+                if (token.DetailType == TokenDetailTypes.BeginBlock)
+                {
+                    blockExpressions.Push(new List<IToken>());
+                }
+                // Current bracketed expression ends: Pop it from stack, convert it to Expression and create "Expression"-Token
+                else if (token.DetailType == TokenDetailTypes.EndBlock)
+                {
+                    var blockExpression = blockExpressions.Pop();
+                    var blockExpressionToken = new ExpressionToken()
+                    {
+                        Type = TokenTypes.Syntax,
+                        DetailType = TokenDetailTypes.BlockExpression,
+                        Value = ParseBlockExpression(blockExpression, context),
+                        Expression = blockExpression
+                    };
+
+                    // If bracketed expression was nested: Add it to the parent expression
+                    if (blockExpressions.Count > 0)
+                        blockExpressions.Peek().Add(blockExpressionToken);
+                    // otherwise add it to the top-level expression
+                    else
+                        decomposedExpression.Add(blockExpressionToken);
+                }
+                // Currently there is a bracketed expression being decomposed: add tokens to the topmost expression
+                else if (blockExpressions.Count > 0)
+                {
+                    blockExpressions.Peek().Add(token);
+                }
+                // Currently no bracketed expression detected: Token is part of the top-level expression
+                else
+                {
+                    decomposedExpression.Add(token);
+                }
+            }
+
+            return SplitIntoExpressions(decomposedExpression, false, TokenDetailTypes.EndOfLine);
         }
 
         private Expression ParseStatement(List<IToken> expression, ParsingContext context)

@@ -8,14 +8,14 @@ namespace FlKr.ScriptLanguage.Parsing
 {
     public partial class Parser
     {
-        private Dictionary<string, ParameterExpression> _variables;
+        // private Dictionary<string, ParameterExpression> _variables;
 
         public Parser()
         {
-            _variables = new Dictionary<string, ParameterExpression>();
+            // _variables = new Dictionary<string, ParameterExpression>();
         }
         
-        private Expression ParseVariableAssignmentExpression(List<IToken> expression)
+        private Expression ParseVariableAssignmentExpression(List<IToken> expression, ParsingContext context)
         {
             if (expression.Count < 3)
                 throw new ParseException(expression,
@@ -29,19 +29,19 @@ namespace FlKr.ScriptLanguage.Parsing
                 throw new ParseException(expression,
                     $"Second token of a variable value assignment has to be a {nameof(TokenDetailTypes.Assignment)}");
 
-            var valueExpression = ParseBracketedExpression(expression.ToArray()[2..].ToList(), out var dataType);
+            var valueExpression = ParseBracketedExpression(expression.ToArray()[2..].ToList(), context, out var dataType);
             var variableName = ((Token) expression[0]).Value;
 
-            if (!_variables.TryGetValue(variableName, out var parameterExpression))
+            if (!context.TryGetVariable(variableName, out var parameterExpression))
             {
                 parameterExpression = Expression.Variable(dataType);
-                _variables.Add(variableName, parameterExpression);
+                context.AddVariable(variableName, parameterExpression);
             }
 
             return Expression.Assign(parameterExpression, valueExpression);
         }
 
-        private Expression ParseValueExpression(List<IToken> expression, out Type dataType)
+        private Expression ParseValueExpression(List<IToken> expression, ParsingContext context, out Type dataType)
         {
             if (expression.Count > 1)
                 throw new ParseException(expression, "Invalid value expression.");
@@ -67,7 +67,7 @@ namespace FlKr.ScriptLanguage.Parsing
                     dataType = expressionToken.DataType;
                     return expressionToken.Value;
                 case TokenDetailTypes.VariableName:
-                    if (!_variables.TryGetValue(((Token) valueToken).Value, out var variable))
+                    if (!context.TryGetVariable(((Token) valueToken).Value, out var variable))
                         throw new ParseException(new List<IToken>() {valueToken}, "Variable has not been declared.");
                     dataType = variable.Type;
                     return variable;

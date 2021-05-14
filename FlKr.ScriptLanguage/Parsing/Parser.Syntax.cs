@@ -8,7 +8,7 @@ namespace FlKr.ScriptLanguage.Parsing
 {
     public partial class Parser
     {
-        private Expression ParseVariableStatement(List<IToken> expression)
+        private Expression ParseVariableStatement(List<IToken> expression, ParsingContext context)
         {
             var expressionWithoutEndToken = expression.SkipLast(1).ToList();
             var assignmentTokenCount = expressionWithoutEndToken.Count(token => token.DetailType == TokenDetailTypes.Assignment);
@@ -17,15 +17,15 @@ namespace FlKr.ScriptLanguage.Parsing
             if (assignmentTokenCount < 1)
                 throw new ParseException(expression, $"Only variable expression from type {nameof(TokenDetailTypes.Assignment)} can be used as statement");
             else
-                return ParseVariableAssignmentExpression(expressionWithoutEndToken);
+                return ParseVariableAssignmentExpression(expressionWithoutEndToken, context);
         }
 
-        private Expression ParseBracketedExpression(List<IToken> expression)
+        private Expression ParseBracketedExpression(List<IToken> expression, ParsingContext context)
         {
-            return ParseBracketedExpression(expression, out var dataType);
+            return ParseBracketedExpression(expression, context, out var dataType);
         }
 
-        private Expression ParseBracketedExpression(List<IToken> expression, out Type dataType)
+        private Expression ParseBracketedExpression(List<IToken> expression, ParsingContext context, out Type dataType)
         {
             var leftBracketCount = expression.Count(t => t.DetailType == TokenDetailTypes.LeftBracket);
             var rightBracketCount = expression.Count(t => t.DetailType == TokenDetailTypes.RightBracket);
@@ -34,7 +34,7 @@ namespace FlKr.ScriptLanguage.Parsing
                 throw new ParseException(expression, "Unequal amount of brackets detected in expression.");
 
             if (leftBracketCount == 0 && rightBracketCount == 0)
-                return ParseOrOperationExpression(expression, out dataType);
+                return ParseOrOperationExpression(expression, context, out dataType);
 
             var decomposedExpression = new List<IToken>();
             var bracketExpressions = new Stack<List<IToken>>();
@@ -53,7 +53,7 @@ namespace FlKr.ScriptLanguage.Parsing
                     {
                         Type = TokenTypes.Syntax,
                         DetailType = TokenDetailTypes.Expression,
-                        Value = ParseOrOperationExpression(bracketExpression, out var type),
+                        Value = ParseOrOperationExpression(bracketExpression, context, out var type),
                         Expression = bracketExpression,
                         DataType = type
                     };
@@ -77,7 +77,7 @@ namespace FlKr.ScriptLanguage.Parsing
                 }
             }
 
-            return ParseOrOperationExpression(decomposedExpression, out dataType);
+            return ParseOrOperationExpression(decomposedExpression, context, out dataType);
         }
     }
 }

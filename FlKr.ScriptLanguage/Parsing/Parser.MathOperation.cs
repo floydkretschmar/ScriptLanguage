@@ -8,7 +8,8 @@ namespace FlKr.ScriptLanguage.Parsing
 {
     public partial class Parser
     {
-        private Expression ParseAdditionOperationExpression(List<IToken> expression, out Type dataType)
+        private Expression ParseAdditionOperationExpression(List<IToken> expression, ParsingContext context,
+            out Type dataType)
         {
             List<List<IToken>> parts = SplitIntoExpressions(
                 expression,
@@ -19,15 +20,17 @@ namespace FlKr.ScriptLanguage.Parsing
             {
                 return ParseMathOperationExpression(
                     parts,
+                    context,
                     Expression.Add,
                     ParseSubtractionOperationExpression,
                     out dataType);
             }
 
-            return ParseSubtractionOperationExpression(expression, out dataType);
+            return ParseSubtractionOperationExpression(expression, context, out dataType);
         }
 
-        private Expression ParseSubtractionOperationExpression(List<IToken> expression, out Type dataType)
+        private Expression ParseSubtractionOperationExpression(List<IToken> expression, ParsingContext context,
+            out Type dataType)
         {
             List<List<IToken>> parts = SplitIntoExpressions(
                 expression,
@@ -37,14 +40,16 @@ namespace FlKr.ScriptLanguage.Parsing
             if (parts.Count > 1)
                 return ParseMathOperationExpression(
                     parts,
+                    context,
                     Expression.Subtract,
                     ParseMultiplicationOperationExpression,
                     out dataType);
 
-            return ParseMultiplicationOperationExpression(expression, out dataType);
+            return ParseMultiplicationOperationExpression(expression, context, out dataType);
         }
 
-        private Expression ParseMultiplicationOperationExpression(List<IToken> expression, out Type dataType)
+        private Expression ParseMultiplicationOperationExpression(List<IToken> expression, ParsingContext context,
+            out Type dataType)
         {
             List<List<IToken>> parts = SplitIntoExpressions(
                 expression,
@@ -54,14 +59,16 @@ namespace FlKr.ScriptLanguage.Parsing
             if (parts.Count > 1)
                 return ParseMathOperationExpression(
                     parts,
+                    context,
                     Expression.Multiply,
                     ParseDivisionOperationExpression,
                     out dataType);
 
-            return ParseDivisionOperationExpression(expression, out dataType);
+            return ParseDivisionOperationExpression(expression, context, out dataType);
         }
 
-        private Expression ParseDivisionOperationExpression(List<IToken> expression, out Type dataType)
+        private Expression ParseDivisionOperationExpression(List<IToken> expression, ParsingContext context,
+            out Type dataType)
         {
             List<List<IToken>> parts = SplitIntoExpressions(
                 expression,
@@ -71,14 +78,16 @@ namespace FlKr.ScriptLanguage.Parsing
             if (parts.Count > 1)
                 return ParseMathOperationExpression(
                     parts,
+                    context,
                     Expression.Divide,
                     ParseModuloOperationExpression,
                     out dataType);
 
-            return ParseModuloOperationExpression(expression, out dataType);
+            return ParseModuloOperationExpression(expression, context, out dataType);
         }
 
-        private Expression ParseModuloOperationExpression(List<IToken> expression, out Type dataType)
+        private Expression ParseModuloOperationExpression(List<IToken> expression, ParsingContext context,
+            out Type dataType)
         {
             List<List<IToken>> parts = SplitIntoExpressions(
                 expression,
@@ -88,14 +97,15 @@ namespace FlKr.ScriptLanguage.Parsing
             if (parts.Count > 1)
                 return ParseMathOperationExpression(
                     parts,
+                    context,
                     Expression.Modulo,
                     ParseNegativeExpression,
                     out dataType);
 
-            return ParseNegativeExpression(expression, out dataType);
+            return ParseNegativeExpression(expression, context, out dataType);
         }
 
-        private Expression ParseNegativeExpression(List<IToken> expression, out Type dataType)
+        private Expression ParseNegativeExpression(List<IToken> expression, ParsingContext context, out Type dataType)
         {
             if (expression.First().DetailType == TokenDetailTypes.Negative)
             {
@@ -103,17 +113,18 @@ namespace FlKr.ScriptLanguage.Parsing
                     throw new ParseException(expression, "Invalid negative numeric expression");
 
                 var expressionToNegate = ParseNegativeExpression(
-                        expression.GetRange(1, expression.Count - 1), out dataType);
+                    expression.GetRange(1, expression.Count - 1), context, out dataType);
                 if (dataType != typeof(double))
                     throw new ParseException(expression,
                         "Expression is not a valid numerical expression.");
                 return Expression.Negate(expressionToNegate);
             }
 
-            return ParseExponentiateOperationExpression(expression, out dataType);
+            return ParseExponentiateOperationExpression(expression, context, out dataType);
         }
-        
-        private Expression ParseExponentiateOperationExpression(List<IToken> expression, out Type dataType)
+
+        private Expression ParseExponentiateOperationExpression(List<IToken> expression, ParsingContext context,
+            out Type dataType)
         {
             List<List<IToken>> parts = SplitIntoExpressions(
                 expression,
@@ -123,26 +134,28 @@ namespace FlKr.ScriptLanguage.Parsing
             if (parts.Count > 1)
                 return ParseMathOperationExpression(
                     parts,
+                    context,
                     Expression.Power,
                     ParseValueExpression,
                     out dataType);
 
-            return ParseValueExpression(expression, out dataType);
+            return ParseValueExpression(expression, context, out dataType);
         }
 
         private Expression ParseMathOperationExpression(
             List<List<IToken>> expressions,
+            ParsingContext context,
             Func<Expression, Expression, BinaryExpression> expressionDefinition,
             ParseOperation parseOperation,
             out Type dataType)
         {
-            var expression = parseOperation(expressions.First(), out dataType);
+            var expression = parseOperation(expressions.First(), context, out dataType);
             if (dataType != typeof(double))
                 throw new ParseException(expressions.First(), "Expression is not a valid numerical expression.");
 
             for (int i = 1; i < expressions.Count; i++)
             {
-                var otherExpression = parseOperation(expressions[i], out var subDataType);
+                var otherExpression = parseOperation(expressions[i], context, out var subDataType);
                 if (subDataType != typeof(double))
                     throw new ParseException(expressions.First(),
                         "Expression is not a valid numerical expression.");

@@ -8,14 +8,14 @@ namespace FlKr.ScriptLanguage.Parsing
 {
     public partial class Parser
     {
-        private Expression ParseControlFlowStatement(List<IToken> expression)
+        private Expression ParseControlFlowStatement(List<IToken> expression, ParsingContext context)
         {
             switch (expression.First().DetailType)
             {
                 case TokenDetailTypes.If:
-                    return ParseConditionalInstructionExpression(expression);
+                    return ParseConditionalInstructionExpression(expression, context);
                 case TokenDetailTypes.Return:
-                    return ParseReturnExpression(expression);
+                    return ParseReturnExpression(expression, context);
                 case TokenDetailTypes.Then:
                     throw new ParseException(expression,
                         $"Tokens from type {nameof(TokenDetailTypes.Then)} can never be the leading token in a control flow expression");
@@ -28,7 +28,7 @@ namespace FlKr.ScriptLanguage.Parsing
             }
         }
 
-        private Expression ParseReturnExpression(List<IToken> expression)
+        private Expression ParseReturnExpression(List<IToken> expression, ParsingContext context)
         {
             var expressionArray = expression.ToArray();
             if (expression.First().DetailType != TokenDetailTypes.Return)
@@ -44,10 +44,19 @@ namespace FlKr.ScriptLanguage.Parsing
                 throw new ParseException(expression,
                     $"Return operation is invalid.");
 
-            return ParseBracketedExpression(expressionArray[1..^1].ToList());
+            var returnExpression = ParseBracketedExpression(expressionArray[1..^1].ToList(), context);
+            if (!context.TryGetVariable(RESULT_VARIABLE_NAME, out var resultVariable))
+            {
+                throw new ParseException(expression, "Cannot return value in function without defined return type.");
+            }
+
+            return Expression.Block(
+                Expression.Assign(resultVariable, returnExpression),
+                Expression.Return(context.ReturnTarget)
+            );
         }
 
-        private Expression ParseConditionalInstructionExpression(List<IToken> expression)
+        private Expression ParseConditionalInstructionExpression(List<IToken> expression, ParsingContext context)
         {
             if (expression.First().DetailType != TokenDetailTypes.If)
                 throw new ParseException(expression,
@@ -70,7 +79,7 @@ namespace FlKr.ScriptLanguage.Parsing
                         $"Control flow operation is missing the {TokenDetailTypes.Then} token.");
             }
 
-            Expression conditionLambda = ParseConditionExpression(subexpression);
+            Expression conditionLambda = ParseConditionExpression(subexpression, context);
 
             position++;
             subexpression.Clear();
@@ -85,7 +94,7 @@ namespace FlKr.ScriptLanguage.Parsing
                         $"Control flow operation was not terminated correctly in the execution block.");
             }
 
-            Expression blockLambda = ParseBlockExpression(subexpression);
+            Expression blockLambda = ParseBlockExpression(subexpression, context);
 
             Expression controlFlowLambda = null;
             // Get the alternate execution block
@@ -102,7 +111,7 @@ namespace FlKr.ScriptLanguage.Parsing
                             $"Control flow operation was not terminated correctly in the alternate execution block.");
                 }
 
-                Expression alternateBlockLambda = ParseBlockExpression(subexpression);
+                Expression alternateBlockLambda = ParseBlockExpression(subexpression, context);
                 controlFlowLambda = Expression.IfThenElse(conditionLambda, blockLambda, alternateBlockLambda);
             }
             else
@@ -118,7 +127,7 @@ namespace FlKr.ScriptLanguage.Parsing
             return controlFlowLambda;
         }
 
-        private Expression ParseConditionExpression(List<IToken> expression)
+        private Expression ParseConditionExpression(List<IToken> expression, ParsingContext context)
         {
             if (expression.Any(t => t.DetailType == TokenDetailTypes.EndOfLine))
                 throw new ParseException(expression, "Conditions cannot contain end of statement tokens.");
@@ -135,7 +144,7 @@ namespace FlKr.ScriptLanguage.Parsing
                 case TokenTypes.LogicOperation:
                 case TokenTypes.MathOperation:
                 case TokenTypes.Syntax:
-                    var condition = ParseBracketedExpression(expression, out var dataType);
+                    var condition = ParseBracketedExpression(expression, context, out var dataType);
                     if (dataType != typeof(bool))
                         throw new ParseException("Conditions is not a valid boolean expression.");
                     return condition;
@@ -144,9 +153,11 @@ namespace FlKr.ScriptLanguage.Parsing
             }
         }
 
-        private Expression ParseBlockExpression(List<IToken> expression)
+        private Expression ParseBlockExpression(List<IToken> expression, ParsingContext context)
         {
-            return ParseStatements(expression);
+            var blockContext = new ParsingContext(context);
+            var statements = ParseStatements(expression, blockContext);
+            return Expression.Block(blockContext.GetVariables(), statements);
         }
     }
 }

@@ -39,7 +39,7 @@ sonst
 ergebnis 4.
 machen.");
             Parser parser = new Parser();
-            Func<bool> func = parser.Parse<bool>(tokens);
+            Func<double> func = parser.Parse<double>(tokens);
             var value = func();
             Debug.Write(value);
         }

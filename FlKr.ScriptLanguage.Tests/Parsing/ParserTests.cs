@@ -69,10 +69,11 @@ namespace FlKr.ScriptLanguage.Tests.Parsing
         {
             var script = @$"
 wenn 1 + 1 = 2 und wahr dann
-C ist 3,
-ergebnis C.";
+C ist 3.
+ergebnis C.
+machen.";
 
-            var func = _parser.Parse<string>(Lexer.Tokenize(script));
+            var func = _parser.Parse<double>(Lexer.Tokenize(script));
             var result = func();
             
             Assert.That(result, Is.EqualTo(3));
@@ -83,12 +84,13 @@ ergebnis C.";
         {
             var script = @$"
 wenn falsch dann
-C ist 3,
-ergebnis C,
+C ist 3.
+ergebnis C.
 sonst
-ergebnis 4.";
+ergebnis 4.
+machen.";
 
-            var func = _parser.Parse<string>(Lexer.Tokenize(script));
+            var func = _parser.Parse<double>(Lexer.Tokenize(script));
             var result = func();
             
             Assert.That(result, Is.EqualTo(4));

@@ -6,27 +6,29 @@ using FlKr.ScriptLanguage.Lexing.Tokens;
 
 namespace FlKr.ScriptLanguage.Parsing
 {
-    delegate Expression ParseOperation(List<IToken> expression, out Type dataType);
+    
+    delegate Expression ParseOperation(List<IToken> expression, ParsingContext context, out Type dataType);
     
     public partial class Parser
     {
+        private static readonly string RESULT_VARIABLE_NAME = "ergebnis";
+        
         public Func<T> Parse<T>(List<IToken> tokens)
         {
-            var finalExpression = ParseStatements(tokens);
-            return Expression.Lambda<Func<T>>(finalExpression).Compile();
-        }
-
-        private Expression ParseStatements(List<IToken> tokens)
-        {
-            var expressions = SplitIntoStatements(tokens);
-            List<Expression> expressionLambdas = new List<Expression>();
-            
-            foreach (var expression in expressions)
+            LabelTarget returnTarget = Expression.Label();
+            ParsingContext context = new ParsingContext()
             {
-                var lambda = ParseStatement(expression);
-                expressionLambdas.Add(lambda);
-            }
-            return Expression.Block(_variables.Values.ToArray(), expressionLambdas);
+                ReturnTarget = returnTarget
+            };
+            ParameterExpression resultVariable = Expression.Variable(typeof(T));
+            context.AddVariable(RESULT_VARIABLE_NAME, resultVariable);
+            
+            var statements = ParseStatements(tokens, context);
+            statements.Add(Expression.Label(returnTarget));
+            statements.Add(resultVariable);
+            
+            var finalExpression = Expression.Block(context.GetVariables(), statements);
+            return Expression.Lambda<Func<T>>(finalExpression).Compile();
         }
 
         private List<List<IToken>> SplitIntoStatements(List<IToken> tokens)
@@ -93,7 +95,20 @@ namespace FlKr.ScriptLanguage.Parsing
             return expressions;
         }
 
-        private Expression ParseStatement(List<IToken> expression)
+        private List<Expression> ParseStatements(List<IToken> tokens, ParsingContext context)
+        {
+            var expressions = SplitIntoStatements(tokens);
+            List<Expression> expressionLambdas = new List<Expression>();
+            
+            foreach (var expression in expressions)
+            {
+                var lambda = ParseStatement(expression, context);
+                expressionLambdas.Add(lambda);
+            }
+            return expressionLambdas;
+        }
+
+        private Expression ParseStatement(List<IToken> expression, ParsingContext context)
         {
             if (expression.Count < 2)
                 throw new ParseException(expression, "Invalid statement.");
@@ -104,9 +119,9 @@ namespace FlKr.ScriptLanguage.Parsing
             switch (expression.First().Type)
             {
                 case TokenTypes.Variable:
-                    return ParseVariableStatement(expression);
+                    return ParseVariableStatement(expression, context);
                 case TokenTypes.ControlFlow:
-                    return ParseControlFlowStatement(expression);
+                    return ParseControlFlowStatement(expression, context);
                 case TokenTypes.Value:
                 case TokenTypes.LogicOperation:
                 case TokenTypes.MathOperation:

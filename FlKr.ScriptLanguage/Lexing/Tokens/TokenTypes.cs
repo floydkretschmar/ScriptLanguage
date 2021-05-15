@@ -7,7 +7,8 @@
         ControlFlow,
         Value,
         Syntax,
-        Variable
+        Variable,
+        Expression
     }
     
     public enum TokenDetailTypes
@@ -51,8 +52,9 @@
         
         // Control flow
         If,
-        Then,
         Else,
+        ElseIf,
+        Do,
         BeginBlock,
         EndBlock,
         Return

@@ -6,13 +6,12 @@ using FlKr.ScriptLanguage.Lexing.Tokens;
 
 namespace FlKr.ScriptLanguage.Parsing
 {
-    
     delegate Expression ParseOperation(List<IToken> expression, ParsingContext context, out Type dataType);
-    
+
     public partial class Parser
     {
         private static readonly string RESULT_VARIABLE_NAME = "ergebnis";
-        
+
         public Func<T> Parse<T>(List<IToken> tokens)
         {
             LabelTarget returnTarget = Expression.Label();
@@ -22,11 +21,11 @@ namespace FlKr.ScriptLanguage.Parsing
             };
             ParameterExpression resultVariable = Expression.Variable(typeof(T));
             context.AddVariable(RESULT_VARIABLE_NAME, resultVariable);
-            
+
             var statements = ParseStatements(tokens, context);
             statements.Add(Expression.Label(returnTarget));
             statements.Add(resultVariable);
-            
+
             var finalExpression = Expression.Block(context.GetVariables(), statements);
             return Expression.Lambda<Func<T>>(finalExpression).Compile();
         }
@@ -53,84 +52,82 @@ namespace FlKr.ScriptLanguage.Parsing
                     expressions.Add(new List<IToken>());
                 }
             }
-            
+
             return expressions;
+        }
+
+        private List<List<IToken>> SplitIntoEndOfLineExpressions(List<IToken> tokens)
+        {
+            var endOfLineExpressions = SplitIntoExpressions(tokens, false, TokenDetailTypes.EndOfLine);
+
+            var mergedExpression = new List<IToken>();
+            var finalExpressions = new List<List<IToken>>();
+            for (int i = 0; i < endOfLineExpressions.Count; i++)
+            {
+                if (endOfLineExpressions[i].First().DetailType == TokenDetailTypes.If)
+                {
+                    if (i + 1 >= endOfLineExpressions.Count ||
+                        (endOfLineExpressions[i + 1].First().DetailType != TokenDetailTypes.ElseIf
+                         && endOfLineExpressions[i + 1].First().DetailType != TokenDetailTypes.Else))
+                    {
+                        finalExpressions.Add(endOfLineExpressions[i]);
+                    }
+                    else
+                    {
+                        mergedExpression = new List<IToken>();
+                        mergedExpression.AddRange(endOfLineExpressions[i]);
+                    }
+                }
+                else if (endOfLineExpressions[i].First().DetailType == TokenDetailTypes.ElseIf)
+                {
+                    if (mergedExpression.Count == 0)
+                        throw new ParseException(endOfLineExpressions[i],
+                            $"{TokenDetailTypes.ElseIf} detected before {TokenDetailTypes.If}");
+                    
+                    mergedExpression.AddRange(endOfLineExpressions[i]);
+                    if (i + 1 >= endOfLineExpressions.Count ||
+                        endOfLineExpressions[i + 1].First().DetailType != TokenDetailTypes.Else)
+                    {
+                        finalExpressions.Add(mergedExpression);
+                    }
+                }
+                else if (endOfLineExpressions[i].First().DetailType == TokenDetailTypes.Else)
+                {
+                    if (mergedExpression.Count == 0)
+                        throw new ParseException(endOfLineExpressions[i],
+                            $"{TokenDetailTypes.Else} detected before {TokenDetailTypes.If}");
+                    
+                    mergedExpression.AddRange(endOfLineExpressions[i]);
+                    finalExpressions.Add(mergedExpression);
+                }
+                else
+                {
+                    finalExpressions.Add(endOfLineExpressions[i]);
+                }
+            }
+
+            return finalExpressions;
         }
 
         private List<Expression> ParseStatements(List<IToken> tokens, ParsingContext context)
         {
             var expressions = ParseBlockExpressions(tokens, context);
             List<Expression> expressionLambdas = new List<Expression>();
-            
+
             foreach (var expression in expressions)
             {
                 var lambda = ParseStatement(expression, context);
                 expressionLambdas.Add(lambda);
             }
+
             return expressionLambdas;
-        }
-
-        private List<List<IToken>> ParseBlockExpressions(List<IToken> tokens, ParsingContext context)
-        {
-            var beginBlockCount = tokens.Count(t => t.DetailType == TokenDetailTypes.BeginBlock);
-            var endBlockCount = tokens.Count(t => t.DetailType == TokenDetailTypes.EndBlock);
-
-            if (beginBlockCount != endBlockCount)
-                throw new ParseException(tokens, "Unequal amount of block start and end tokens detected in expression.");
-
-            if (beginBlockCount == 0 && endBlockCount == 0)
-                return SplitIntoExpressions(tokens, false, TokenDetailTypes.EndOfLine);
-
-            var decomposedExpression = new List<IToken>();
-            var blockExpressions = new Stack<List<IToken>>();
-            beginBlockCount = 0;
-            endBlockCount = 0;
-            foreach (var token in tokens)
-            {
-                // New bracketed expression starts: Put it on top of the stack
-                if (token.DetailType == TokenDetailTypes.BeginBlock)
-                {
-                    blockExpressions.Push(new List<IToken>());
-                }
-                // Current bracketed expression ends: Pop it from stack, convert it to Expression and create "Expression"-Token
-                else if (token.DetailType == TokenDetailTypes.EndBlock)
-                {
-                    var blockExpression = blockExpressions.Pop();
-                    var blockExpressionToken = new ExpressionToken()
-                    {
-                        Type = TokenTypes.Syntax,
-                        DetailType = TokenDetailTypes.BlockExpression,
-                        Value = ParseBlockExpression(blockExpression, context),
-                        Expression = blockExpression
-                    };
-
-                    // If bracketed expression was nested: Add it to the parent expression
-                    if (blockExpressions.Count > 0)
-                        blockExpressions.Peek().Add(blockExpressionToken);
-                    // otherwise add it to the top-level expression
-                    else
-                        decomposedExpression.Add(blockExpressionToken);
-                }
-                // Currently there is a bracketed expression being decomposed: add tokens to the topmost expression
-                else if (blockExpressions.Count > 0)
-                {
-                    blockExpressions.Peek().Add(token);
-                }
-                // Currently no bracketed expression detected: Token is part of the top-level expression
-                else
-                {
-                    decomposedExpression.Add(token);
-                }
-            }
-
-            return SplitIntoExpressions(decomposedExpression, false, TokenDetailTypes.EndOfLine);
         }
 
         private Expression ParseStatement(List<IToken> expression, ParsingContext context)
         {
             if (expression.Count < 2)
                 throw new ParseException(expression, "Invalid statement.");
-            
+
             if (expression.Last().DetailType != TokenDetailTypes.EndOfLine)
                 throw new ParseException(expression, "Invalid end of statement.");
 

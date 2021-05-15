@@ -4,7 +4,7 @@ namespace FlKr.ScriptLanguage.Lexing.Tokens
 {
     public abstract class BaseToken<TValue> : IToken
     {
-        public TValue Value { get; init; }
+        public TValue Value { get; set; }
         
         public TokenTypes Type { get; init; }
         

@@ -68,7 +68,7 @@ namespace FlKr.ScriptLanguage.Tests.Parsing
         public void Parse_IfThen_ReturnsConditionalResult()
         {
             var script = @"
-wenn 1 + 1 = 2 und wahr dann {
+wenn 1 + 1 = 2 und wahr mache {
 C ist 3.
 ergebnis C.
 }.";
@@ -83,7 +83,7 @@ ergebnis C.
         public void Parse_IfThenElse_ReturnsConditionalResult()
         {
             var script = @"
-wenn falsch dann {
+wenn falsch mache {
 C ist 3.
 ergebnis C.
 } sonst ergebnis 4.";
@@ -100,13 +100,31 @@ ergebnis C.
             var script = @"
 A ist 3.
 B ist wahr.
-wenn B dann ergebnis A
+wenn B mache ergebnis A.
 sonst ergebnis 4.";
 
             var func = _parser.Parse<double>(Lexer.Tokenize(script));
             var result = func();
             
             Assert.That(result, Is.EqualTo(3));
+        }
+        
+        [Test]
+        public void Parse_IfThenElseBlock_ReturnsConditionalResult()
+        {
+            var script = @"
+A ist 3.
+B ist falsch.
+wenn B mache ergebnis A.
+sonst { 
+C ist A + 5.
+ergebnis C.
+}.";
+
+            var func = _parser.Parse<double>(Lexer.Tokenize(script));
+            var result = func();
+            
+            Assert.That(result, Is.EqualTo(8));
         }
 
         [Test]

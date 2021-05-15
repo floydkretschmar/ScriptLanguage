@@ -79,5 +79,62 @@ namespace FlKr.ScriptLanguage.Parsing
 
             return ParseOrOperationExpression(decomposedExpression, context, out dataType);
         }
+
+        private List<List<IToken>> ParseBlockExpressions(List<IToken> tokens, ParsingContext context)
+        {
+            var beginBlockCount = tokens.Count(t => t.DetailType == TokenDetailTypes.BeginBlock);
+            var endBlockCount = tokens.Count(t => t.DetailType == TokenDetailTypes.EndBlock);
+
+            if (beginBlockCount != endBlockCount)
+                throw new ParseException(tokens, "Unequal amount of block start and end tokens detected in expression.");
+
+            if (beginBlockCount == 0 && endBlockCount == 0)
+                return SplitIntoEndOfLineExpressions(tokens);
+
+            var decomposedExpression = new List<IToken>();
+            var blockExpressions = new Stack<List<IToken>>();
+            foreach (var token in tokens)
+            {
+                // New bracketed expression starts: Put it on top of the stack
+                if (token.DetailType == TokenDetailTypes.BeginBlock)
+                {
+                    blockExpressions.Push(new List<IToken>());
+                }
+                // Current bracketed expression ends: Pop it from stack, convert it to Expression and create "Expression"-Token
+                else if (token.DetailType == TokenDetailTypes.EndBlock)
+                {
+                    var blockExpression = blockExpressions.Pop();
+                    var blockExpressionToken = new ExpressionToken()
+                    {
+                        Type = TokenTypes.Syntax,
+                        DetailType = TokenDetailTypes.BlockExpression,
+                        // Dont evaluate the expression here yet, otherwise variables might not be resolved yet
+                        Value = null,
+                        // Value = ParseBlockExpression(blockExpression, context),
+                        Expression = blockExpression
+                    };
+
+                    // If bracketed expression was nested: Add it to the parent expression
+                    if (blockExpressions.Count > 0)
+                        blockExpressions.Peek().Add(blockExpressionToken);
+                    // otherwise add it to the top-level expression
+                    else
+                        decomposedExpression.Add(blockExpressionToken);
+                }
+                // Currently there is a bracketed expression being decomposed: add tokens to the topmost expression
+                else if (blockExpressions.Count > 0)
+                {
+                    blockExpressions.Peek().Add(token);
+                }
+                // Currently no bracketed expression detected: Token is part of the top-level expression
+                else
+                {
+                    decomposedExpression.Add(token);
+                }
+            }
+
+            var splitExpressions = SplitIntoEndOfLineExpressions(decomposedExpression);
+            return splitExpressions;
+        }
     }
 }

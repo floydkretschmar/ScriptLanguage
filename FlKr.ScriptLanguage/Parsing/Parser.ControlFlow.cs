@@ -146,30 +146,30 @@ namespace FlKr.ScriptLanguage.Parsing
             }
         }
 
-        private Expression ParseControlFlowExecutionBlockExpression(List<IToken> expression, ParsingContext context, ref int position)
+        private Expression ParseControlFlowExecutionBlockExpression(List<IToken> expression, ParsingContext context,
+            ref int position)
         {
-            if (expression[position].DetailType == TokenDetailTypes.BlockExpression)
+            if (expression[position].Type == TokenTypes.Expression &&
+                expression[position].DetailType == TokenDetailTypes.BlockExpression)
             {
                 var expressionToken = (ExpressionToken)expression[position];
                 expressionToken.Value = ParseBlockExpression(expressionToken.Expression, context);
                 return expressionToken.Value;
             }
-            else
-            {
-                var subexpression = new List<IToken>();
-                // Get the execution block
-                while (expression[position].DetailType != TokenDetailTypes.EndOfLine)
-                {
-                    subexpression.Add(expression[position]);
-                    position++;
-                    if (position >= expression.Count)
-                        throw new ParseException(expression,
-                            $"Control flow operation was not terminated correctly in the execution block.");
-                }
 
+            var subexpression = new List<IToken>();
+            // Get the execution block
+            while (expression[position].DetailType != TokenDetailTypes.EndOfLine)
+            {
                 subexpression.Add(expression[position]);
-                return ParseStatement(subexpression, context);
+                position++;
+                if (position >= expression.Count)
+                    throw new ParseException(expression,
+                        $"Control flow operation was not terminated correctly in the execution block.");
             }
+
+            subexpression.Add(expression[position]);
+            return ParseStatement(subexpression, context);
         }
 
         private Expression ParseBlockExpression(List<IToken> expression, ParsingContext context)

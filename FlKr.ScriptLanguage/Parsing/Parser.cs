@@ -83,7 +83,7 @@ namespace FlKr.ScriptLanguage.Parsing
                     if (mergedExpression.Count == 0)
                         throw new ParseException(endOfLineExpressions[i],
                             $"{TokenDetailTypes.ElseIf} detected before {TokenDetailTypes.If}");
-                    
+
                     mergedExpression.AddRange(endOfLineExpressions[i]);
                     if (i + 1 >= endOfLineExpressions.Count ||
                         endOfLineExpressions[i + 1].First().DetailType != TokenDetailTypes.Else)
@@ -96,7 +96,7 @@ namespace FlKr.ScriptLanguage.Parsing
                     if (mergedExpression.Count == 0)
                         throw new ParseException(endOfLineExpressions[i],
                             $"{TokenDetailTypes.Else} detected before {TokenDetailTypes.If}");
-                    
+
                     mergedExpression.AddRange(endOfLineExpressions[i]);
                     finalExpressions.Add(mergedExpression);
                 }
@@ -131,6 +131,9 @@ namespace FlKr.ScriptLanguage.Parsing
             if (expression.Last().DetailType != TokenDetailTypes.EndOfLine)
                 throw new ParseException(expression, "Invalid end of statement.");
 
+            var errorMessage = $"Only expression beginning with tokens from type {nameof(TokenTypes.Variable)} or " +
+                               $"{nameof(TokenTypes.ControlFlow)} can be used as statements.";
+
             switch (expression.First().Type)
             {
                 case TokenTypes.Variable:
@@ -141,9 +144,8 @@ namespace FlKr.ScriptLanguage.Parsing
                 case TokenTypes.LogicOperation:
                 case TokenTypes.MathOperation:
                 case TokenTypes.Syntax:
-                    throw new ParseException(expression,
-                        $"Only expression beginning with tokens from type {nameof(TokenTypes.Variable)} or " +
-                        $"{nameof(TokenTypes.ControlFlow)} can be used as statements.");
+                case TokenTypes.Expression:
+                    throw new ParseException(expression, errorMessage);
                 default:
                     throw new ParseException($"Token type {expression.First().Type} not implemented yet.");
             }

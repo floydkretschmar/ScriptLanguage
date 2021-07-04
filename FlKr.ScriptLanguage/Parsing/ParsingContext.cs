@@ -35,11 +35,6 @@ namespace FlKr.ScriptLanguage.Parsing
             _variables = new Dictionary<string, ParameterExpression>();
         }
 
-        public bool ExistsVariable(string name)
-        {
-            return _variables.ContainsKey(name) || (_parentContext != null && _parentContext.ExistsVariable(name));
-        }
-
         public bool TryGetVariable(string name, out ParameterExpression variable)
         {
             if (!_variables.TryGetValue(name, out variable))

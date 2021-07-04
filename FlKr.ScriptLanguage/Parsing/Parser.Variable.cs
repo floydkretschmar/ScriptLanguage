@@ -62,7 +62,7 @@ namespace FlKr.ScriptLanguage.Parsing
                 case TokenDetailTypes.Text:
                     dataType = typeof(string);
                     return Expression.Constant(((Token) valueToken).Value, dataType);
-                case TokenDetailTypes.Expression:
+                case TokenDetailTypes.BracketedExpression:
                     var expressionToken = (ExpressionToken) valueToken;
                     dataType = expressionToken.DataType;
                     return expressionToken.Value;

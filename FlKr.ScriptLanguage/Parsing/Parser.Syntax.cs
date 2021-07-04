@@ -51,8 +51,8 @@ namespace FlKr.ScriptLanguage.Parsing
                     var bracketExpression = bracketExpressions.Pop();
                     var bracketExpressionToken = new ExpressionToken()
                     {
-                        Type = TokenTypes.Syntax,
-                        DetailType = TokenDetailTypes.Expression,
+                        Type = TokenTypes.Expression,
+                        DetailType = TokenDetailTypes.BracketedExpression,
                         Value = ParseOrOperationExpression(bracketExpression, context, out var type),
                         Expression = bracketExpression,
                         DataType = type
@@ -100,17 +100,17 @@ namespace FlKr.ScriptLanguage.Parsing
                 {
                     blockExpressions.Push(new List<IToken>());
                 }
-                // Current bracketed expression ends: Pop it from stack, convert it to Expression and create "Expression"-Token
+                // Current bracketed expression ends: Pop it from stack, convert it to Expression and create "Expression"-Tokenk
                 else if (token.DetailType == TokenDetailTypes.EndBlock)
                 {
                     var blockExpression = blockExpressions.Pop();
                     var blockExpressionToken = new ExpressionToken()
                     {
-                        Type = TokenTypes.Syntax,
+                        Type = TokenTypes.Expression,
                         DetailType = TokenDetailTypes.BlockExpression,
                         // Dont evaluate the expression here yet, otherwise variables might not be resolved yet
+                        // Will be evaluated in ParseStatement
                         Value = null,
-                        // Value = ParseBlockExpression(blockExpression, context),
                         Expression = blockExpression
                     };
 

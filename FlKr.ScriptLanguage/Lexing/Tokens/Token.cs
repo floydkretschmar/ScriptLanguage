@@ -8,5 +8,14 @@ namespace FlKr.ScriptLanguage.Lexing.Tokens
         {
             return this.Value;
         }
+
+        public static Token EndOfLine()
+        {
+            return new Token()
+            {
+                Type = TokenTypes.Syntax,
+                DetailType = TokenDetailTypes.EndOfLine
+            };
+        }
     }
 }

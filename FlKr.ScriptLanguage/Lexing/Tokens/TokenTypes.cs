@@ -16,7 +16,7 @@
         // Syntax
         Whitespace,
         EndOfLine,
-        Expression,
+        BracketedExpression,
         BlockExpression,
         LeftBracket,
         RightBracket,

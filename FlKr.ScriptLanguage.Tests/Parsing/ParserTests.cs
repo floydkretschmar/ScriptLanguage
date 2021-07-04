@@ -71,7 +71,7 @@ namespace FlKr.ScriptLanguage.Tests.Parsing
 wenn 1 + 1 = 2 und wahr mache {
 C ist 3.
 ergebnis C.
-}.";
+} sonst ergebnis 4.";
 
             var func = _parser.Parse<double>(Lexer.Tokenize(script));
             var result = func();

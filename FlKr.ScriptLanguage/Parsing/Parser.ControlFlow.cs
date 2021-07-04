@@ -61,63 +61,96 @@ namespace FlKr.ScriptLanguage.Parsing
                 throw new ParseException(expression,
                     $"Control flow operations have to start with the {nameof(TokenDetailTypes.If)} token.");
 
-            var subexpression = ExtractConditionExpression(expression.ToArray()[1..], out var position);
-
-            position++;
-            Expression conditionLambda = ParseConditionExpression(subexpression, context);
-
-            position++;
-            Expression conditionBlockLambda =
+            int position = 1;
+            var subexpression = ExtractConditionExpression(expression, ref position);
+            Expression condition = ParseConditionExpression(subexpression, context);
+            Expression conditionBlock =
                 ParseControlFlowExecutionBlockExpression(expression, context, ref position);
 
-            position++;
-            Expression controlFlowLambda = null;
             // Get the alternate execution block(s)
-            if (expression[position].DetailType is TokenDetailTypes.Else or TokenDetailTypes.ElseIf)
+            // get all else ifs (if they exist)
+            List<Expression> alternateConditions =
+                new List<Expression>();
+            List<Expression> alternateConditionBlocks =
+                new List<Expression>();
+            if (expression[position].DetailType == TokenDetailTypes.ElseIf)
             {
-                // get all else ifs
-                List<Expression> alternateConditionBlockLambdas = new List<Expression>();
                 while (expression[position].DetailType == TokenDetailTypes.ElseIf)
                 {
                     position++;
-                    alternateConditionBlockLambdas.Add(ParseControlFlowExecutionBlockExpression(
-                        expression, context, ref position));
+                    subexpression = ExtractConditionExpression(expression, ref position);
+                    var additionalCondition = ParseConditionExpression(subexpression, context);
+                    var additionalConditionBlock = ParseControlFlowExecutionBlockExpression(expression, context, ref position);
+                    alternateConditions.Add(additionalCondition);
+                    alternateConditionBlocks.Add(additionalConditionBlock);
                 }
-
-                // get the else
                 position++;
-                var alternateBlockLambda = ParseControlFlowExecutionBlockExpression(
-                    expression, context, ref position);
+            }
 
-                controlFlowLambda = Expression.IfThenElse(conditionLambda, conditionBlockLambda, alternateBlockLambda);
+            // get the else-block (if it exists)
+            Expression elseBlock = null;
+            if (expression[position].DetailType == TokenDetailTypes.Else)
+            {
+                position++;
+                elseBlock = ParseControlFlowExecutionBlockExpression(
+                    expression, context, ref position);
+            }
+
+            // Construct the if-elseif-else statement:
+            Expression controlFlowLambda = null;
+            if (alternateConditionBlocks.Count > 0 || elseBlock != null)
+            {
+                if (alternateConditionBlocks.Count > 0)
+                {
+                    if (alternateConditions.Count != alternateConditionBlocks.Count)
+                        throw new ParseException(expression, "More else if Blocks than else if conditions detected.");
+                    var finalCondition = alternateConditions.Last();
+                    var finalBlock = alternateConditionBlocks.Last();
+                    var elseIfBlocks = elseBlock != null
+                        ? Expression.IfThenElse(finalCondition, finalBlock, elseBlock)
+                        : Expression.IfThen(finalCondition, finalBlock);
+                    
+                    for (int i = alternateConditionBlocks.Count - 1; i >= 0; i--)
+                    {
+                        elseIfBlocks = Expression.IfThenElse(alternateConditions[i], alternateConditionBlocks[i],
+                            elseIfBlocks);
+                    }
+
+                    controlFlowLambda = Expression.IfThenElse(condition, conditionBlock, elseIfBlocks);
+                }
+                else
+                {
+                    controlFlowLambda = Expression.IfThenElse(condition, conditionBlock, elseBlock);
+                }
             }
             else
             {
-                controlFlowLambda = Expression.IfThen(conditionLambda, conditionBlockLambda);
+                controlFlowLambda = Expression.IfThen(condition, conditionBlock);
             }
-
+            
             return controlFlowLambda;
         }
 
-        private List<IToken> ExtractConditionExpression(IToken[] expression, out int position)
+        private List<IToken> ExtractConditionExpression(List<IToken> expression, ref int position)
         {
-            if (expression[0].DetailType == TokenDetailTypes.Do)
-                throw new ParseException(expression.ToList(),
+            if (expression[position].DetailType == TokenDetailTypes.Do ||
+                !expression.Exists(x => x.DetailType == TokenDetailTypes.Do))
+                throw new ParseException(expression,
                     $"Control flow operation is missing the condition.");
 
             var subexpression = new List<IToken>();
-            position = 0;
 
             // Get the condition
             while (expression[position].DetailType is not TokenDetailTypes.Do)
             {
                 subexpression.Add(expression[position]);
                 position++;
-                if (position >= expression.Length)
+                if (position >= expression.Count)
                     throw new ParseException(expression.ToList(),
                         $"Control flow operation is missing the {TokenDetailTypes.Do} token.");
             }
 
+            position++;
             return subexpression;
         }
 
@@ -155,6 +188,7 @@ namespace FlKr.ScriptLanguage.Parsing
             {
                 var expressionToken = (ExpressionToken) expression[position];
                 expressionToken.Value = ParseBlockExpression(expressionToken.Expression, context);
+                position++;
                 return expressionToken.Value;
             }
 
@@ -168,8 +202,9 @@ namespace FlKr.ScriptLanguage.Parsing
                     throw new ParseException(expression,
                         $"Control flow operation was not terminated correctly in the execution block.");
             }
-
             subexpression.Add(expression[position]);
+
+            position++;
             return ParseStatement(subexpression, context);
         }
 

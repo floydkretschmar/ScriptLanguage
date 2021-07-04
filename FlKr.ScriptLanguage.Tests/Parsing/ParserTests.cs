@@ -142,6 +142,29 @@ ergebnis C.
             
             Assert.That(result, Is.EqualTo(8));
         }
+        
+        [Test]
+        public void Parse_IfThenElseIfElseBlock_ReturnsConditionalResult()
+        {
+            var script = @"
+A ist 3.
+B ist falsch.
+wenn B mache ergebnis A.
+sonst wenn A = 4 mache ergebnis 5.
+sonst wenn A = 3 mache {
+D ist 4.
+ergebnis D + 3.
+}
+sonst { 
+C ist A + 5.
+ergebnis C.
+}.";
+
+            var func = _parser.Parse<double>(Lexer.Tokenize(script));
+            var result = func();
+            
+            Assert.That(result, Is.EqualTo(7));
+        }
 
         [Test]
         public void Parse_AssignmentOperation_AssignsValue()

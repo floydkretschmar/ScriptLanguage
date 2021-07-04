@@ -31,11 +31,13 @@ namespace FlKr.ScriptLanguage.Example
         static string Example1()
         {
             return @"
-A ist wahr.
+A ist falsch.
 
 wenn A und 1 + 1 = 2 mache {
     C ist 3.
     ergebnis C.
+} sonst wenn 1 + 2 = 3 mache {
+    ergebnis 17.
 } sonst ergebnis 4.";
         }
     }

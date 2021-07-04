@@ -11,15 +11,6 @@ namespace FlKr.ScriptLanguage.Lexing.Tokens
         public TokenDetailTypes DetailType { get; init; }
 
         public abstract string ToString(string format, IFormatProvider formatProvider);
-        // public string ToString(string format, IFormatProvider formatProvider)
-        // {
-        //     if (token is Token textToken)
-        //         return textToken.Value;
-        //     else if (token is ExpressionToken expressionToken)
-        //         return $"{string.Join(" ", expressionToken.Expression.Select(x => x.GetValue()))}";
-        //     else
-        //         return token.ToString();
-        // }
 
         public override string ToString()
         {

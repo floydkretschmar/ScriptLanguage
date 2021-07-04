@@ -10,6 +10,7 @@ namespace FlKr.ScriptLanguage.Parsing
     {
         private Expression ParseControlFlowStatement(List<IToken> expression, ParsingContext context)
         {
+            var message = "Tokens from type {0} can never be the leading token in a control flow expression";
             switch (expression.First().DetailType)
             {
                 case TokenDetailTypes.If:
@@ -17,11 +18,11 @@ namespace FlKr.ScriptLanguage.Parsing
                 case TokenDetailTypes.Return:
                     return ParseReturnExpression(expression, context);
                 case TokenDetailTypes.Do:
-                    throw new ParseException(expression,
-                        $"Tokens from type {nameof(TokenDetailTypes.Do)} can never be the leading token in a control flow expression");
+                    throw new ParseException(expression, string.Format(message, TokenDetailTypes.Do));
                 case TokenDetailTypes.Else:
-                    throw new ParseException(expression,
-                        $"Tokens from type {nameof(TokenDetailTypes.Else)} can never be the leading token in a control flow expression");
+                    throw new ParseException(expression, string.Format(message, TokenDetailTypes.Else));
+                case TokenDetailTypes.ElseIf:
+                    throw new ParseException(expression, string.Format(message, TokenDetailTypes.ElseIf));
                 default:
                     throw new ParseException(
                         $"Token detail type {expression.First().DetailType} not implemented yet for token type {expression.First().Type}");
@@ -31,6 +32,7 @@ namespace FlKr.ScriptLanguage.Parsing
         private Expression ParseReturnExpression(List<IToken> expression, ParsingContext context)
         {
             var expressionArray = expression.ToArray();
+
             if (expression.First().DetailType != TokenDetailTypes.Return)
                 throw new ParseException(expression,
                     $"Return operations have to start with the {nameof(TokenDetailTypes.Return)} token.");
@@ -41,12 +43,11 @@ namespace FlKr.ScriptLanguage.Parsing
 
             var subexpression = expressionArray[1..^1].ToList();
             if (subexpression.Count < 1)
-                throw new ParseException(expression,
-                    $"Return operation is invalid.");
+                throw new ParseException(expression, "Return operation is invalid.");
 
             var returnExpression = ParseBracketedExpression(expressionArray[1..^1].ToList(), context);
             if (!context.TryGetVariable(RESULT_VARIABLE_NAME, out var resultVariable))
-                throw new ParseException(expression, "Cannot return value in function without defined return type.");
+                throw new InvalidOperationException("Return value parameter has not been defined in Parse function.");
 
             return Expression.Block(
                 Expression.Assign(resultVariable, returnExpression),
@@ -152,7 +153,7 @@ namespace FlKr.ScriptLanguage.Parsing
             if (expression[position].Type == TokenTypes.Expression &&
                 expression[position].DetailType == TokenDetailTypes.BlockExpression)
             {
-                var expressionToken = (ExpressionToken)expression[position];
+                var expressionToken = (ExpressionToken) expression[position];
                 expressionToken.Value = ParseBlockExpression(expressionToken.Expression, context);
                 return expressionToken.Value;
             }
@@ -175,17 +176,8 @@ namespace FlKr.ScriptLanguage.Parsing
         private Expression ParseBlockExpression(List<IToken> expression, ParsingContext context)
         {
             var blockContext = new ParsingContext(context);
-
-            if (expression.Last().DetailType == TokenDetailTypes.EndOfLine)
-            {
-                var statements = ParseStatements(expression, blockContext);
-                return Expression.Block(blockContext.GetVariables(), statements);
-            }
-            else
-            {
-                var statement = ParseStatement(expression, blockContext);
-                return Expression.Block(blockContext.GetVariables(), statement);
-            }
+            var statements = ParseStatements(expression, blockContext);
+            return Expression.Block(blockContext.GetVariables(), statements);
         }
     }
 }

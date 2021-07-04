@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using FlKr.ScriptLanguage.Lexing;
 using FlKr.ScriptLanguage.Lexing.Tokens;
@@ -17,6 +18,7 @@ namespace FlKr.ScriptLanguage.Example
             Console.WriteLine(code);
             Console.WriteLine("----------- Start tokenizing -----------");
             List<IToken> tokens = Lexer.Tokenize(code);
+            Console.WriteLine($"List of Tokens: {string.Join(',', tokens.Select(x => $"[{x.ToString()}|{x.Type}|{x.DetailType}]"))}");
             Console.WriteLine("----------- Finished tokenizing -----------");
             Parser parser = new Parser();
             Console.WriteLine("----------- Start parsing -----------");
@@ -31,7 +33,7 @@ namespace FlKr.ScriptLanguage.Example
             return @"
 A ist wahr.
 
-wenn A und 1 + 1 = 2 dann {
+wenn A und 1 + 1 = 2 mache {
     C ist 3.
     ergebnis C.
 } sonst ergebnis 4.";

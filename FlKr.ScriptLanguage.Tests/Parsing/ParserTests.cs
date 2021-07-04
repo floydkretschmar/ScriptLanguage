@@ -95,6 +95,22 @@ ergebnis C.
         }
         
         [Test]
+        public void Parse_NestedIfThen_ReturnsConditionalResult()
+        {
+            var script = @"
+wenn 1 + 1 = 2 und wahr mache {
+    wenn 2 + 2 = 4 mache {
+        ergebnis 3.
+    }.
+} sonst ergebnis 4.";
+
+            var func = _parser.Parse<double>(Lexer.Tokenize(script));
+            var result = func();
+            
+            Assert.That(result, Is.EqualTo(3));
+        }
+        
+        [Test]
         public void Parse_IfThenElseNoBlocks_ReturnsConditionalResult()
         {
             var script = @"
@@ -156,6 +172,12 @@ ergebnis A + B.";
         [TestCase("ergebnis A.", "not been declared")]
         [TestCase("ergebnis 1 2.", "Invalid value expression")]
         [TestCase("ergebnis sonst.", "valid value expression")]
+        [TestCase("ergebnis.", "Return operation is invalid.")]
+        [TestCase("mache ergebnis 4.", "Do can never be the leading token in a control flow expression")]
+        [TestCase("sonst ergebnis 4.", "Else detected before If")]
+        [TestCase("sonst wenn wahr mache ergebnis 4.", "ElseIf detected before If")]
+        [TestCase("wenn a ist 3 mache ergebnis 4.", "Conditions cannot contain assignment tokens")]
+        [TestCase("wenn 3 + 3 mache ergebnis 4.", "Conditions is not a valid boolean expression")]
         public void Parse_InvalidControlFlowSyntaxProvided_ThrowParseException(string script, string messageSnippet)
         {
             Assert.That(() => _parser.Parse<double>(Lexer.Tokenize(script)), Throws.TypeOf<ParseException>().With.Message.Contains(messageSnippet));
@@ -164,6 +186,8 @@ ergebnis A + B.";
         [Test]
         [TestCase("ergebnis -.", "Invalid negative numeric")]
         [TestCase("ergebnis -wahr.", "not a valid numerical")]
+        [TestCase("ergebnis 1-2+wahr.", "not a valid numerical")]
+        [TestCase("ergebnis wahr-wahr+wahr.", "not a valid numerical")]
         public void Parse_InvalidMathSyntaxProvided_ThrowParseException(string script, string messageSnippet)
         {
             Assert.That(() => _parser.Parse<double>(Lexer.Tokenize(script)), Throws.TypeOf<ParseException>().With.Message.Contains(messageSnippet));
@@ -177,6 +201,9 @@ ergebnis A + B.";
         [TestCase("(3 + 3).", "can be used as statements")]
         [TestCase("-3.", "can be used as statements")]
         [TestCase("und 3.", "can be used as statements")]
+        [TestCase("ergebnis a", "Invalid end of statement.")]
+        [TestCase("ergebnis", "Invalid statement.")]
+        [TestCase("{{ a ist 3 }", "Unequal amount of block start and end tokens detected in expression.")]
         public void Parse_InvalidGeneralSyntaxProvided_ThrowParseException(string script, string messageSnippet)
         {
             Assert.That(() => _parser.Parse<double>(Lexer.Tokenize(script)), Throws.TypeOf<ParseException>().With.Message.Contains(messageSnippet));

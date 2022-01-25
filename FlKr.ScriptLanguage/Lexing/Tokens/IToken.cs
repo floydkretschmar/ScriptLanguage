@@ -1,11 +1,10 @@
 ﻿using System;
 
-namespace FlKr.ScriptLanguage.Lexing.Tokens
+namespace FlKr.ScriptLanguage.Lexing.Tokens;
+
+public interface IToken : IFormattable
 {
-    public interface IToken : IFormattable
-    {
-        TokenTypes Type { get; }
-        
-        TokenDetailTypes DetailType { get; }
-    }
+    TokenTypes Type { get; }
+
+    TokenDetailTypes DetailType { get; }
 }

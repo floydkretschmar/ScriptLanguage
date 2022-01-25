@@ -1,20 +1,20 @@
 ﻿using System;
+using System.Globalization;
 
-namespace FlKr.ScriptLanguage.Lexing.Tokens
+namespace FlKr.ScriptLanguage.Lexing.Tokens;
+
+public abstract class BaseToken<TValue> : IToken
 {
-    public abstract class BaseToken<TValue> : IToken
+    public TValue Value { get; set; }
+
+    public TokenTypes Type { get; init; }
+
+    public TokenDetailTypes DetailType { get; init; }
+
+    public abstract string ToString(string format, IFormatProvider formatProvider);
+
+    public override string ToString()
     {
-        public TValue Value { get; set; }
-        
-        public TokenTypes Type { get; init; }
-        
-        public TokenDetailTypes DetailType { get; init; }
-
-        public abstract string ToString(string format, IFormatProvider formatProvider);
-
-        public override string ToString()
-        {
-            return ToString(null, System.Globalization.CultureInfo.CurrentCulture);
-        }
+        return ToString(null, CultureInfo.CurrentCulture);
     }
 }

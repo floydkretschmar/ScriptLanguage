@@ -1,62 +1,59 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using FlKr.ScriptLanguage.Lexing.Tokens;
 
-namespace FlKr.ScriptLanguage.Parsing
+namespace FlKr.ScriptLanguage.Parsing;
+
+public class ParsingContext
 {
-    public class ParsingContext
+    private readonly ParsingContext _parentContext;
+
+    private readonly LabelTarget _returnTarget;
+
+    private readonly Dictionary<string, ParameterExpression> _variables;
+
+    public ParsingContext(ParsingContext parentContext) : this()
     {
-        private ParsingContext _parentContext;
+        _parentContext = parentContext;
+    }
 
-        private Dictionary<string, ParameterExpression> _variables;
+    public ParsingContext()
+    {
+        _variables = new Dictionary<string, ParameterExpression>();
+    }
 
-        private LabelTarget _returnTarget;
-        
-        public LabelTarget ReturnTarget
+    public LabelTarget ReturnTarget
+    {
+        get
         {
-            get
-            {
-                if (_returnTarget == null && _parentContext != null)
-                    return _parentContext.ReturnTarget;
-                else
-                    return _returnTarget;
-            }
-            init => _returnTarget = value;
+            if (_returnTarget == null && _parentContext != null)
+                return _parentContext.ReturnTarget;
+            return _returnTarget;
+        }
+        init => _returnTarget = value;
+    }
+
+    public bool TryGetVariable(string name, out ParameterExpression variable)
+    {
+        if (!_variables.TryGetValue(name, out variable))
+        {
+            if (_parentContext != null)
+                return _parentContext.TryGetVariable(name, out variable);
+
+            variable = null;
+            return false;
         }
 
-        public ParsingContext(ParsingContext parentContext) : this()
-        {
-            _parentContext = parentContext;
-        }
+        return true;
+    }
 
-        public ParsingContext()
-        {
-            _variables = new Dictionary<string, ParameterExpression>();
-        }
+    public void AddVariable(string name, ParameterExpression variable)
+    {
+        _variables.Add(name, variable);
+    }
 
-        public bool TryGetVariable(string name, out ParameterExpression variable)
-        {
-            if (!_variables.TryGetValue(name, out variable))
-            {
-                if (_parentContext != null)
-                    return _parentContext.TryGetVariable(name, out variable);
-
-                variable = null;
-                return false;
-            }
-
-            return true;
-        }
-
-        public void AddVariable(string name, ParameterExpression variable)
-        {
-            _variables.Add(name, variable);
-        }
-
-        public List<ParameterExpression> GetVariables()
-        {
-            return _variables.Values.ToList();
-        }
+    public List<ParameterExpression> GetVariables()
+    {
+        return _variables.Values.ToList();
     }
 }

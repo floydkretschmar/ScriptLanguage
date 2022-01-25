@@ -2,11 +2,12 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net5.0</TargetFramework>
+        <TargetFramework>net6.0</TargetFramework>
+        <LangVersion>10</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\FlKr.ScriptLanguage\FlKr.ScriptLanguage.csproj" />
+        <ProjectReference Include="..\FlKr.ScriptLanguage\FlKr.ScriptLanguage.csproj"/>
     </ItemGroup>
 
 </Project>

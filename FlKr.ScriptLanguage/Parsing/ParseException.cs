@@ -7,10 +7,6 @@ namespace FlKr.ScriptLanguage.Parsing
 {
     public class ParseException : Exception
     {
-        public ParseException(List<IToken> tokens) : base(string.Join(" ", tokens.Select(x => x.ToString())))
-        {
-        }
-
         public ParseException(List<IToken> tokens, string message) : base(
             $"{message}: {string.Join(" ", tokens.Select(x => x.ToString()))}")
         {

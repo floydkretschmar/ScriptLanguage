@@ -12,7 +12,7 @@ namespace FlKr.ScriptLanguage.Parsing
         {
         }
 
-        public ParseException(string? message) : base(message)
+        public ParseException(string message) : base(message)
         {
         }
     }
